@@ -24,24 +24,42 @@ labels = np.array(labels)
 # Split data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=0.2)
 
-# Create model
-model = Sequential([
-    Conv2D(32, (3, 3), activation='relu', input_shape=(100, 100, 1)),
-    MaxPooling2D((2, 2)),
-    Conv2D(64, (3, 3), activation='relu'),
-    MaxPooling2D((2, 2)),
-    Flatten(),
-    Dense(64, activation='relu'),
-    Dense(10, activation='softmax')  # adjust the number here to match the number of your classes
-])
 
-# Compile and train model
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.fit(X_train, y_train, epochs=10)
 
-# Evaluate model
-loss, accuracy = model.evaluate(X_test, y_test)
-print(f'Accuracy: {accuracy}')
 
-# Save model
-model.save('card_recognition_model.h5')
+
+
+mnist = tf.keras.datasets.fashion_mnist
+
+# gives two sets of lists:
+# training, and testing
+(training_images, training_labels), (test_images, test_labels) = mnist.load_data()
+
+# plt.imshow(training_images[0])
+# print(training_labels[0])
+# print(training_images[0])
+
+# normalizing the data from a range from 0 to 1 to make it easier to train (b&w images)
+training_images  = training_images / 255.0
+test_images = test_images / 255.0
+
+
+# defining the model
+model = tf.keras.models.Sequential([tf.keras.layers.Flatten(), # creates a 1D array of the image
+                                    tf.keras.layers.Dense(128, activation=tf.nn.relu),  # adds a layer of neurons # Relu: "If X>0 return X, else return 0"
+                                    tf.keras.layers.Dense(10, activation=tf.nn.softmax)]) # picks the biggest value (the one that has the highest probability)
+
+
+# compile the model
+model.compile(optimizer = tf.keras.optimizers.Adam(),
+              loss = 'sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# trains the model
+model.fit(training_images, training_labels, epochs=100)
+
+# save the model
+tf.keras.Model.save(model, './models/' + modelName + '.keras')
+
+# test the model
+model.evaluate(test_images, test_labels)

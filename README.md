@@ -10,3 +10,4 @@ deactivate
 
 # Packages to Install (in .venv)
 pip install tensorflow matplotlib pyyaml h5py
+pip install scikit-learn opencv-python

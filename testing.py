@@ -1,9 +1,7 @@
 import cv2
 import numpy as np
+import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
-from preformat_data.file_format import get_images
 
 # Define your image paths and labels
 image_paths, labels = get_images()

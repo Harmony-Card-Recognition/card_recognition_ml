@@ -1,63 +1,81 @@
-import cv2
-import numpy as np
 import tensorflow as tf
+import json
+import numpy as np
 from sklearn.model_selection import train_test_split
 
-# Define your image paths and labels
-image_paths, labels = get_images()
+from data_formatting import from_json_to_trainingset
 
-# Load and preprocess images
-images = []  # list of images
-for image_path in image_paths:
-    image = cv2.imread(image_path)
-    image = cv2.resize(image, (100, 100))  # resize to standard size
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # convert to grayscale
-    image = image / 255.0  # normalize pixel values
-    images.append(image)
+# PROCESSING THE JSON TO USEABLE TRAINING SETS
+# Load the data
+with open('./.data/small_dataset.json', 'r') as f:
+    data = json.load(f)
 
-# Convert to numpy arrays and reshape for TensorFlow
-images = np.array(images).reshape(-1, 100, 100, 1)
-labels = np.array(labels)
+# Get the length
+if isinstance(data, list):
+    length = len(data)
+elif isinstance(data, dict):
+    length = len(data['images'])  # replace 'images' with the key you're interested in
+else:
+    length = "Unknown"
 
-# Split data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=0.2)
+# Convert to numpy arrays and reshape as needed
+# This assumes each data point is a flattened image
+images = np.array(data['images'])
+labels = np.array(data['labels'])
 
+# Reshape the images if they are flattened
+images = images.reshape(-1, 480, 680, 3)
 
+# Normalize the images
+images = images / 255.0
 
-
-
-
-mnist = tf.keras.datasets.fashion_mnist
-
-# gives two sets of lists:
-# training, and testing
-(training_images, training_labels), (test_images, test_labels) = mnist.load_data()
-
-# plt.imshow(training_images[0])
-# print(training_labels[0])
-# print(training_images[0])
-
-# normalizing the data from a range from 0 to 1 to make it easier to train (b&w images)
-training_images  = training_images / 255.0
-test_images = test_images / 255.0
+# Split the data into training and test sets
+training_images, test_images, training_labels, test_labels = train_test_split(images, labels, test_size=0.2)
 
 
-# defining the model
-model = tf.keras.models.Sequential([tf.keras.layers.Flatten(), # creates a 1D array of the image
-                                    tf.keras.layers.Dense(128, activation=tf.nn.relu),  # adds a layer of neurons # Relu: "If X>0 return X, else return 0"
-                                    tf.keras.layers.Dense(10, activation=tf.nn.softmax)]) # picks the biggest value (the one that has the highest probability)
 
 
-# compile the model
-model.compile(optimizer = tf.keras.optimizers.Adam(),
-              loss = 'sparse_categorical_crossentropy',
-              metrics=['accuracy'])
 
-# trains the model
-model.fit(training_images, training_labels, epochs=100)
+# 
+class myCallback(tf.keras.callbacks.Callback):
+  def on_epoch_end(self, epoch, logs={}):
+    if(logs.get('accuracy')>0.9):
+      print("\nReached 90% accuracy so cancelling training!")
+      self.model.stop_training = True
 
-# save the model
-tf.keras.Model.save(model, './models/' + modelName + '.keras')
+callbacks = myCallback()
 
-# test the model
+# DEFINE THE MODEL
+# # Fully connected Network
+# model = tf.keras.models.Sequential([
+#   tf.keras.layers.Flatten(),
+#   tf.keras.layers.Dense(512, activation=tf.nn.relu),
+#   tf.keras.layers.Dense(10, activation=tf.nn.softmax)
+# ])
+
+# Convolutional Neural Network (CNN)
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(480, 680, 3)),
+    tf.keras.layers.MaxPooling2D(2, 2),
+    tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(2,2),
+    tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(2,2),
+    tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
+    tf.keras.layers.MaxPooling2D(2,2),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(512, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+
+
+# TRAIN THE MODEL
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(training_images, training_labels, epochs=5, callbacks=[callbacks])
+
+
+# POST TRAINING ANALYSIS    
 model.evaluate(test_images, test_labels)
+model.save('./models/model.h5')
+model.summary()

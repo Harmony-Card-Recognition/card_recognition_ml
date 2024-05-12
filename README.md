@@ -3,7 +3,7 @@ Identifies cards based on an image.
 
 
 # to activate the venv
-.venv\Scripts\activate
+.venv/Scripts/activate
 # do deactivate the venv
 deactivate
 

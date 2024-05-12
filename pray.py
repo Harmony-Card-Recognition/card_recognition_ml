@@ -63,7 +63,7 @@ def prep_images_for_network(storage_path):
                 #open the image, then convert it to an array and scale values from 0-1
                 image = Image.open(f"{storage_path}/{file}")
                 image = image.resize((224,312))
-                image = image.convert('RGB')
+                image = image.convert('RGB') # BW?
                 scaled_array = np.array(image)/255
 
                 #pull the multiverse_id from the filename
@@ -246,7 +246,7 @@ def test_model_via_index(image_set_name, card_index, model, training_list, test_
     filepath = f'{image_set_name}/Testing/{card_index}.jpg'
     test_card = Image.open(filepath)
     test_card = test_card.resize((224,312))
-    test_card = test_card.convert('RGB')
+    test_card = test_card.convert('RGB') #BW?
 
     #provide the image to the model and see what comes back
     img_as_array = np.array(np.array(test_card)/255)

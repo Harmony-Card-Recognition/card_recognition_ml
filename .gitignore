@@ -1,2 +1,5 @@
 /.venv
 /.data
+/venv
+/my_image_set
+/deck.json

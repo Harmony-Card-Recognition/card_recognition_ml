@@ -17,6 +17,7 @@ from keras import datasets, layers, models
 import shutil
 from time import localtime, strftime, time
 from IPython.display import display
+import copy
 
 def current_time():
     '''Help: Returns the current time as a nice string.'''
@@ -48,6 +49,95 @@ def load_object(filename, verbose=True):
         print(f"File loaded from {filename}")
     return load_test
 
+def zoom_rotate_img(image):
+    '''Help: Randomly rotate and zoom the given PIL image degrees and return it'''
+    #store initial image size
+    initial_size = image.size
+    #determine at random how much or little we scale the image
+    scale = 0.95+random.random()*.1
+    scaled_img_size = tuple([int(i*scale) for i in initial_size])
+
+
+    #create a blank background with a random color and same size as intial image
+    bg_color = tuple(np.random.choice(range(256),size=3))
+    background = Image.new('RGB', initial_size, bg_color)
+
+    #determine the center location to place our rotated card
+    center_box = tuple((n-o)//2 for n,o in zip(initial_size, scaled_img_size))
+
+    #scale the image
+    scaled_img = image.resize(scaled_img_size)
+
+    #randomly select an angle to skew the image
+    max_angle = 5
+    skew_angle = random.randint(-max_angle, max_angle)
+    
+    #add the scaled image to our color background
+    background.paste(scaled_img.rotate(skew_angle, fillcolor=bg_color,expand=1).resize(scaled_img_size), 
+                     center_box)
+
+    #potentially flip the image 180 degrees
+    if random.choice([True, False]):
+        background = background.rotate(180)
+    
+    return background
+
+def blur_img(image):
+    '''Help: Blur the given PIL image and return it'''
+    return image.filter(filter=ImageFilter.BLUR)
+
+def adjust_color(image):
+    '''Help: Randomly reduce or increase the saturation of the provided image and return it'''
+    converter = ImageEnhance.Color(image)
+    #randomly decide to half or double the image saturation
+    saturation = random.choice([.5, 1.5])
+    return converter.enhance(saturation)
+
+def adjust_contrast(image):
+    '''Help: Randomly decrease or increase the contrast of the provided image and return it'''
+    converter = ImageEnhance.Contrast(image)
+    #randomly decide to half or double the image saturation
+    contrast = random.choice([.5, 1.5])
+    return converter.enhance(contrast)
+
+def adjust_sharpness(image):
+    '''Help: Randomly decrease or increase the sharpness of the provided image and return it'''
+    converter = ImageEnhance.Sharpness(image)
+    #randomly decide to half or double the image saturation
+    sharpness = random.choice([.5, 1.5])
+    return converter.enhance(sharpness)
+
+def random_edit_img(image, distort=True, verbose=True):
+    '''Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
+    the image if need be.'''
+    
+    if distort:
+        #randomly choose which editing operations to perform
+        edit_permission = np.random.choice(a=[False, True], size=(4))
+
+        #always skew the image, randomly make the other edits
+        image = zoom_rotate_img(image)
+        if verbose:
+            print('Image skewed')
+        if edit_permission[0]:
+            image = blur_img(image)
+            if verbose:
+                print('Image blurred')    
+        if edit_permission[1]:
+            image = adjust_color(image)
+            if verbose:
+                print('Image color adjusted')
+        if edit_permission[2]:
+            image = adjust_contrast(image)
+            if verbose:
+                print('Image contrast adjusted')
+        if edit_permission[3]:
+            image = adjust_sharpness(image)
+            if verbose:
+                print('Image sharpness adjusted')
+    
+    return image
+
 
 def prep_images_for_network(storage_path):
     '''Help: Given a folder of distorted printings, compile all images and their labels into arrays for
@@ -56,6 +146,9 @@ def prep_images_for_network(storage_path):
     #initialize the empty arrays
     image_array = []
     label_array = np.array([], dtype=int)
+
+    count = 0
+    mincount = 0
 
     for subdir, dirs, files in os.walk(storage_path):
         for file in np.sort(files):
@@ -66,12 +159,18 @@ def prep_images_for_network(storage_path):
                 image = image.convert('RGB')
                 scaled_array = np.array(image)/255
 
-                #pull the multiverse_id from the filename
-                label = int(file[0])
+                if(not storage_path.__contains__("Testing")):
+                    label = int(file.split('-')[0])
+                else:
+                    label = int(file.split('.')[0])
 
                 #add the data
                 image_array.append(scaled_array)
                 label_array = np.append(label_array, label)
+                mincount += 1
+                if mincount == 4:
+                    count += 1
+                    mincount = 0
 
     #convert image list to numpy array
     image_array = np.array(image_array)
@@ -105,14 +204,29 @@ def generate_imgs(multiverse_id_list, storage_path):
     for multiverse_id in multiverse_id_list:
         printings_distorted += 1
         #pull the image URL using the multiverse_id
-        image_url = get_image_url_by_multiverse_id(multiverse_id, image_size)
+        if (storage_path.__contains__("Testing")):
+            print(multiverse_id[0])
+            print(multiverse_id[1])
+            image_url = get_image_url_by_multiverse_id(multiverse_id[0], image_size)
+        else:
+            image_url = get_image_url_by_multiverse_id(multiverse_id, image_size)
         if image_url == None:
             continue
 
         #get the raw image file
-        clean_img = Image.open(urlopen(image_url))
+        img = Image.open(urlopen(image_url))
 
-        clean_img.save(f"{storage_path}/{count}.jpg")
+        #immediately save if it is testing image
+        if (storage_path.__contains__("Testing")):
+            img.save(f"{storage_path}/{multiverse_id[1]}.jpg")
+        else:
+            for i in range(4):
+                img_copy = copy.deepcopy(img)
+                #randomly choose if an image should get distorted
+                if random.choice([True, True, True, False]):
+                    img_copy = random_edit_img(img, distort=True, verbose=False)
+                img_copy.save(f"{storage_path}/{count}-{i}.jpg")
+
         count+=1
             
     print(f"\n{images_created} total unique distortions saved from {printings_distorted} different printings.")
@@ -197,21 +311,32 @@ def train_CNN_model(model_name, model_data, unique_printings, epochs=10, verbose
     if os.path.exists(f'{model_name}.model'):
         shutil.rmtree(f'{model_name}.model')
 
-    
-    print(training_images)
-    print(training_images.shape)
-    print(training_images.shape[1:])
+    # #initialize the neural network model
+    # model = models.Sequential()
+    # model.add(layers.Conv2D(32, (3,3), activation='relu', input_shape=training_images.shape[1:]))
+    # model.add(layers.MaxPooling2D(2,2))
+    # model.add(layers.Conv2D(64, (3,3), activation='relu'))
+    # model.add(layers.BatchNormalization())
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(64, activation='relu'))
+    # model.add(layers.Dropout(0.5)) 
+    # model.add(layers.Dense(unique_printings, activation='softmax'))
 
-    #initialize the neural network model
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3,3), activation='relu', input_shape=training_images.shape[1:]))
     model.add(layers.MaxPooling2D(2,2))
     model.add(layers.Conv2D(64, (3,3), activation='relu'))
-    model.add(layers.BatchNormalization())
+    model.add(layers.MaxPooling2D(2,2))
+    model.add(layers.Conv2D(128, (3,3), activation='relu'))
+    model.add(layers.MaxPooling2D(2,2))
+    model.add(layers.Conv2D(128, (3,3), activation='relu'))
+    model.add(layers.MaxPooling2D(2,2))
     model.add(layers.Flatten())
-    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(512, activation='relu'))
     model.add(layers.Dropout(0.5)) 
     model.add(layers.Dense(unique_printings, activation='softmax'))
+
+
 
     # Define the optimizer
     optimizer = keras.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
@@ -242,7 +367,7 @@ after {elapsed_time(model_start_time)}!\n")
     return model
 
 
-def test_model_via_index(image_set_name, card_index, model, training_list, test_list):
+def test_model_via_index(image_set_name, card_index, model):
     filepath = f'{image_set_name}/Testing/{card_index}.jpg'
     test_card = Image.open(filepath)
     test_card = test_card.resize((224,312))
@@ -260,7 +385,7 @@ def test_model_via_index(image_set_name, card_index, model, training_list, test_
 
     correct = False
     #display the result!
-    if training_list[result_index] == test_list[card_index]:
+    if result_index == card_index:
         #display(test_card)
         correct = True
         print(f'For card index {card_index}, model predicted index {result_index} \
@@ -272,38 +397,59 @@ with {np.round(confidence*100,4)}% confidence. (INCORRECT)')
         #display(test_card, Image.open(f'{image_set_name}/Testing/{result_index}-sub_index.jpg'))
 
 #function to randomly select 100 multiverse IDs from deck.json
-def random_multiverse_ids():
+def random_multiverse_ids(times=25):
     '''Help: Randomly select 100 multiverse IDs from deck.json and return them as a list.'''
     multiverse_ids = []
     count = 0
-    while count < 100:
+    while count < times:
         card = random.choice(data)
         if len(card['multiverse_ids']) > 0:
             multiverse_ids.append(card['multiverse_ids'][0])
             count += 1
     return multiverse_ids
 
+def test_model(model, test_data, test_labels):
+    test_loss, test_acc = model.evaluate(test_data, test_labels, verbose=2)
+    print('\nTest Accuracy: ', test_acc) 
 
-# List of multiverse IDs
-multiverse_id_list1 = random_multiverse_ids()
+# #List of multiverse IDs
+# multiverse_id_list1 = random_multiverse_ids(100)
 
-#pick 2 random number between 1 - 95
-num1 = random.randint(1, 95)
-num2 = random.randint(1, 95)
-multiverse_id_list2 = [multiverse_id_list1[num1], multiverse_id_list1[num2]]
+# multiverse_id_list2 = []
+# #pick random number between 1 - 95
+# for i in range(15):
+#     num = random.randint(1, 95)
+#     multiverse_id_list2.append([multiverse_id_list1[num], num])
+
+# print(multiverse_id_list2)
+
 
 # # Generate image set
-model_data = generate_img_set("my_image_set", multiverse_id_list1, multiverse_id_list2)
+#model_data = generate_img_set("imagev2", multiverse_id_list1, multiverse_id_list2)
 
 # Number of unique printings
-unique_printings = len(multiverse_id_list1)
+#unique_printings = len(multiverse_id_list1)
 
 # Train the model
-#model = train_CNN_model("my_model", model_data, unique_printings, 400)
+#model = train_CNN_model("modelv2", model_data, unique_printings, 50)
 
-model = models.load_model('my_model.keras')
+model_data = load_object('imagev2 Arrays.p')
 
-model.fit(model_data[0][0], model_data[0][1], epochs=200, validation_data=(model_data[1][0], model_data[1][1]))
+model = models.load_model('modelv2.keras')
 
-for i in range(len(multiverse_id_list2)):
-    test_model_via_index("my_image_set", i, model, multiverse_id_list1, multiverse_id_list2)
+model.fit(model_data[0][0], model_data[0][1], epochs=1, validation_data=(model_data[1][0], model_data[1][1]))
+
+print(model_data[0][1])
+print(model_data[1][1])
+
+#test_model(model, model_data[1][0], model_data[1][1])
+#model.evaluate()
+
+# print(model.summary())
+
+# print(multiverse_id_list1)
+# print(multiverse_id_list2)
+
+
+for i in range(len(model_data[1][1])):
+    test_model_via_index("imagev2", model_data[1][1][i], model)

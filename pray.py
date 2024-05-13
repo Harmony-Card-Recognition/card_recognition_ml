@@ -9,6 +9,7 @@ import os
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 from urllib.request import urlopen
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 import numpy as np
 import random
@@ -19,7 +20,10 @@ from time import localtime, strftime, time
 from IPython.display import display
 import copy
 
-def current_time():
+from image_processing import random_edit_img
+
+
+def get_current_time():
     '''Help: Returns the current time as a nice string.'''
     return strftime("%B %d, %I:%M%p", localtime())
 
@@ -49,94 +53,6 @@ def load_object(filename, verbose=True):
         print(f"File loaded from {filename}")
     return load_test
 
-def zoom_rotate_img(image):
-    '''Help: Randomly rotate and zoom the given PIL image degrees and return it'''
-    #store initial image size
-    initial_size = image.size
-    #determine at random how much or little we scale the image
-    scale = 0.95+random.random()*.1
-    scaled_img_size = tuple([int(i*scale) for i in initial_size])
-
-
-    #create a blank background with a random color and same size as intial image
-    bg_color = tuple(np.random.choice(range(256),size=3))
-    background = Image.new('RGB', initial_size, bg_color)
-
-    #determine the center location to place our rotated card
-    center_box = tuple((n-o)//2 for n,o in zip(initial_size, scaled_img_size))
-
-    #scale the image
-    scaled_img = image.resize(scaled_img_size)
-
-    #randomly select an angle to skew the image
-    max_angle = 5
-    skew_angle = random.randint(-max_angle, max_angle)
-    
-    #add the scaled image to our color background
-    background.paste(scaled_img.rotate(skew_angle, fillcolor=bg_color,expand=1).resize(scaled_img_size), 
-                     center_box)
-
-    #potentially flip the image 180 degrees
-    if random.choice([True, False]):
-        background = background.rotate(180)
-    
-    return background
-
-def blur_img(image):
-    '''Help: Blur the given PIL image and return it'''
-    return image.filter(filter=ImageFilter.BLUR)
-
-def adjust_color(image):
-    '''Help: Randomly reduce or increase the saturation of the provided image and return it'''
-    converter = ImageEnhance.Color(image)
-    #randomly decide to half or double the image saturation
-    saturation = random.choice([.5, 1.5])
-    return converter.enhance(saturation)
-
-def adjust_contrast(image):
-    '''Help: Randomly decrease or increase the contrast of the provided image and return it'''
-    converter = ImageEnhance.Contrast(image)
-    #randomly decide to half or double the image saturation
-    contrast = random.choice([.5, 1.5])
-    return converter.enhance(contrast)
-
-def adjust_sharpness(image):
-    '''Help: Randomly decrease or increase the sharpness of the provided image and return it'''
-    converter = ImageEnhance.Sharpness(image)
-    #randomly decide to half or double the image saturation
-    sharpness = random.choice([.5, 1.5])
-    return converter.enhance(sharpness)
-
-def random_edit_img(image, distort=True, verbose=True):
-    '''Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
-    the image if need be.'''
-    
-    if distort:
-        #randomly choose which editing operations to perform
-        edit_permission = np.random.choice(a=[False, True], size=(4))
-
-        #always skew the image, randomly make the other edits
-        image = zoom_rotate_img(image)
-        if verbose:
-            print('Image skewed')
-        if edit_permission[0]:
-            image = blur_img(image)
-            if verbose:
-                print('Image blurred')    
-        if edit_permission[1]:
-            image = adjust_color(image)
-            if verbose:
-                print('Image color adjusted')
-        if edit_permission[2]:
-            image = adjust_contrast(image)
-            if verbose:
-                print('Image contrast adjusted')
-        if edit_permission[3]:
-            image = adjust_sharpness(image)
-            if verbose:
-                print('Image sharpness adjusted')
-    
-    return image
 
 
 def prep_images_for_network(storage_path):
@@ -245,7 +161,7 @@ def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_lis
     '''
 
     if verbose:
-        print(f"Process started for {image_set_name} on {current_time()} ...")
+        print(f"Process started for {image_set_name} on {get_current_time()} ...")
         start_time = time()
 
     #if the folder already exists, delete it so we can start fresh
@@ -258,8 +174,7 @@ def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_lis
     os.mkdir(f'{image_set_name}/Training')
 
     if verbose:
-        print(f'Folder structure created, generating {len(multiverse_id_list_train)} \
-training images now ...')
+        print(f'Folder structure created, generating {len(multiverse_id_list_train)} training images now ...')
 
     #now create images for training and testing, testing will always have two images, change here if need be
     #create the training images
@@ -269,8 +184,7 @@ training images now ...')
     generate_imgs(multiverse_id_list_train, training_storage_path)
 
     if verbose:
-        print(f"Training images finished on {current_time()}, now generating {len(multiverse_id_list_train)*2} \
-testing images ...")
+        print(f"Training images finished on {get_current_time()}, now generating {len(multiverse_id_list_train)*2} testing images ...")
 
     #create the testing images
     testing_storage_path = f"{image_set_name}/Testing"
@@ -279,8 +193,7 @@ testing images ...")
     generate_imgs(multiverse_id_list_test, testing_storage_path)
 
     if verbose:
-        print(f"All images created and saved under {image_set_name} on {current_time()}. \n\
-Formatting images and labels for neural net processing now ...")
+        print(f"All images created and saved under {image_set_name} on {get_current_time()}. \nFormatting images and labels for neural net processing now ...")
 
     #now open up all the image files and store contents as arrays for the neural net
     training_images, training_labels = prep_images_for_network(training_storage_path)
@@ -291,8 +204,7 @@ Formatting images and labels for neural net processing now ...")
     save_object(model_data, f'{image_set_name} Arrays.p', verbose=False)
 
     if verbose:
-        print(f"Pre processing complete on {current_time()} after {elapsed_time(start_time)}. \
-\n\nTraining & testing data saved locally ({image_set_name} Arrays.p) and ready for neural network!\n\n")
+        print(f"Pre processing complete on {get_current_time()} after {elapsed_time(start_time)}.\n\nTraining & testing data saved locally ({image_set_name} Arrays.p) and ready for neural network!\n\n")
 
     return model_data
 
@@ -304,23 +216,12 @@ def train_CNN_model(model_name, model_data, unique_printings, epochs=10, verbose
     ((training_images, training_labels), (testing_images, testing_labels)) = model_data
 
     if verbose:
-        print(f'Initializing {model_name} on {current_time()} ...')
+        print(f'Initializing {model_name} on {get_current_time()} ...')
         model_start_time = time()
 
     #if the folder already exists, delete it so we can start fresh
     if os.path.exists(f'{model_name}.model'):
         shutil.rmtree(f'{model_name}.model')
-
-    # #initialize the neural network model
-    # model = models.Sequential()
-    # model.add(layers.Conv2D(32, (3,3), activation='relu', input_shape=training_images.shape[1:]))
-    # model.add(layers.MaxPooling2D(2,2))
-    # model.add(layers.Conv2D(64, (3,3), activation='relu'))
-    # model.add(layers.BatchNormalization())
-    # model.add(layers.Flatten())
-    # model.add(layers.Dense(64, activation='relu'))
-    # model.add(layers.Dropout(0.5)) 
-    # model.add(layers.Dense(unique_printings, activation='softmax'))
 
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3,3), activation='relu', input_shape=training_images.shape[1:]))
@@ -361,8 +262,7 @@ def train_CNN_model(model_name, model_data, unique_printings, epochs=10, verbose
     model.save(f'{model_name}.keras')
 
     if verbose:
-        print(f"\nModel evaluated & saved locally at '{model_name}.model' on {current_time()} \
-after {elapsed_time(model_start_time)}!\n")
+        print(f"\nModel evaluated & saved locally at '{model_name}.model' on {get_current_time()} after {elapsed_time(model_start_time)}!\n")
 
     return model
 

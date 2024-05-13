@@ -18,6 +18,14 @@ import shutil
 from time import localtime, strftime, time
 from IPython.display import display
 
+# =======================================================================
+
+
+json_filepath = './.data/reduced_deckdrafterprod.MTGCard.json'
+
+
+# =======================================================================
+
 def current_time():
     '''Help: Returns the current time as a nice string.'''
     return strftime("%B %d, %I:%M%p", localtime())
@@ -66,7 +74,7 @@ def prep_images_for_network(storage_path):
                 image = image.convert('RGB') # BW?
                 scaled_array = np.array(image)/255
 
-                #pull the multiverse_id from the filename
+                #pull the _id from the filename
                 label = int(file[0])
 
                 #add the data
@@ -79,21 +87,21 @@ def prep_images_for_network(storage_path):
     return image_array, label_array
 
 # Load the JSON data
-with open('deck.json', 'r', encoding='utf-8') as f:
+with open(json_filepath, 'r', encoding='utf-8') as f:
     data = json.load(f)
 
-# Function to get image url by multiverse_id
-def get_image_url_by_multiverse_id(multiverse_id, image_size):
+# Function to get image url by _id
+def get_image_url_by_id(_id, image_size):
     for item in data:
-        if 'multiverse_ids' in item and 'image_uris' in item and multiverse_id in item['multiverse_ids']:
+        if '_id' in item and 'image_uris' in item and _id in item['_id']:
             return item['image_uris'][image_size]
     return None
 
-def generate_imgs(multiverse_id_list, storage_path):
+def generate_imgs(_id_list, storage_path):
     '''Help: High level function to reduce the testing & training image creation process down to a single step. 
-    Provide a string list of multiverse_ids, the number of distortions desired for each printing, a general 
+    Provide a string list of _ids, the number of distortions desired for each printing, a general 
     storage location for the image files, and the final image size desired. Creates "poorly photographed" 
-    versions of each multiverse_id printing provided. Results are named based on their index in the list.'''
+    versions of each _id printing provided. Results are named based on their index in the list.'''
     
     image_size = 'normal'
     
@@ -102,10 +110,10 @@ def generate_imgs(multiverse_id_list, storage_path):
 
     count = 0
     #iterate through the provided list
-    for multiverse_id in multiverse_id_list:
+    for _id in _id_list:
         printings_distorted += 1
-        #pull the image URL using the multiverse_id
-        image_url = get_image_url_by_multiverse_id(multiverse_id, image_size)
+        #pull the image URL using the _id
+        image_url = get_image_url_by_id(_id, image_size)
         if image_url == None:
             continue
 
@@ -118,13 +126,13 @@ def generate_imgs(multiverse_id_list, storage_path):
     print(f"\n{images_created} total unique distortions saved from {printings_distorted} different printings.")
     print(f"Images stored @ '{storage_path}'\n")
 
-def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_list_test, resize=True, verbose=True):
+def generate_img_set(image_set_name, _id_list_train, _id_list_test, resize=True, verbose=True):
     '''Help: Given appropriate parameters, generate num_distortions distorted image copies of each card in 
-    multiverse_id_list. Then prep all the images for neural net training and save the resulting arrays.
+    _id_list. Then prep all the images for neural net training and save the resulting arrays.
     Returns model_data: ((training_images, training_labels), (testing_images, testing_labels))
     
     image_set_name: str, desired folder name of current image set
-    multiverse_ids_list, list of ints, card printings to use
+    _ids_list, list of ints, card printings to use
     num_distortions, number of warped copies of each card to create
     resize, boolean, if false, images keep 936,672 original resolution, otherwise resize to (224,312)
     verbose, boolean, if true print statements show function progress
@@ -144,7 +152,7 @@ def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_lis
     os.mkdir(f'{image_set_name}/Training')
 
     if verbose:
-        print(f'Folder structure created, generating {len(multiverse_id_list_train)} \
+        print(f'Folder structure created, generating {len(_id_list_train)} \
 training images now ...')
 
     #now create images for training and testing, testing will always have two images, change here if need be
@@ -152,17 +160,17 @@ training images now ...')
     training_storage_path = f"{image_set_name}/Training"
 
     #generate the images
-    generate_imgs(multiverse_id_list_train, training_storage_path)
+    generate_imgs(_id_list_train, training_storage_path)
 
     if verbose:
-        print(f"Training images finished on {current_time()}, now generating {len(multiverse_id_list_train)*2} \
+        print(f"Training images finished on {current_time()}, now generating {len(_id_list_train)*2} \
 testing images ...")
 
     #create the testing images
     testing_storage_path = f"{image_set_name}/Testing"
 
     #generate the images
-    generate_imgs(multiverse_id_list_test, testing_storage_path)
+    generate_imgs(_id_list_test, testing_storage_path)
 
     if verbose:
         print(f"All images created and saved under {image_set_name} on {current_time()}. \n\
@@ -202,15 +210,29 @@ def train_CNN_model(model_name, model_data, unique_printings, epochs=10, verbose
     print(training_images.shape)
     print(training_images.shape[1:])
 
-    #initialize the neural network model
+    # #initialize the neural network model
+    # model = models.Sequential()
+    # model.add(layers.Conv2D(32, (3,3), activation='relu', input_shape=training_images.shape[1:]))
+    # model.add(layers.MaxPooling2D(2,2))
+    # model.add(layers.Conv2D(64, (3,3), activation='relu'))
+    # model.add(layers.BatchNormalization())
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(64, activation='relu'))
+    # model.add(layers.Dropout(0.5)) 
+    # model.add(layers.Dense(unique_printings, activation='softmax'))
+
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3,3), activation='relu', input_shape=training_images.shape[1:]))
     model.add(layers.MaxPooling2D(2,2))
     model.add(layers.Conv2D(64, (3,3), activation='relu'))
-    model.add(layers.BatchNormalization())
+    model.add(layers.MaxPooling2D(2,2))
+    model.add(layers.Conv2D(128, (3,3), activation='relu'))
+    model.add(layers.MaxPooling2D(2,2))
+    model.add(layers.Conv2D(128, (3,3), activation='relu'))
+    model.add(layers.MaxPooling2D(2,2))
     model.add(layers.Flatten())
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dropout(0.5)) 
+    model.add(layers.Dense(512, activation='relu'))
+    model.add(layers.Dropout(0.5))
     model.add(layers.Dense(unique_printings, activation='softmax'))
 
     # Define the optimizer
@@ -271,39 +293,39 @@ with {np.round(confidence*100,4)}% confidence.')
 with {np.round(confidence*100,4)}% confidence. (INCORRECT)')
         #display(test_card, Image.open(f'{image_set_name}/Testing/{result_index}-sub_index.jpg'))
 
-#function to randomly select 100 multiverse IDs from deck.json
-def random_multiverse_ids():
-    '''Help: Randomly select 100 multiverse IDs from deck.json and return them as a list.'''
-    multiverse_ids = []
+#function to randomly select 100 IDs from json file
+def random_ids():
+    '''Help: Randomly select 100 IDs from json file and return them as a list.'''
+    _ids = []
     count = 0
     while count < 100:
         card = random.choice(data)
-        if len(card['multiverse_ids']) > 0:
-            multiverse_ids.append(card['multiverse_ids'][0])
+        if len(card['_id']) > 0:
+            _ids.append(card['_id'][0])
             count += 1
-    return multiverse_ids
+    return _ids
 
 
-# List of multiverse IDs
-multiverse_id_list1 = random_multiverse_ids()
+# List of sIDs
+_id_list1 = random_ids()
 
 #pick 2 random number between 1 - 95
 num1 = random.randint(1, 95)
 num2 = random.randint(1, 95)
-multiverse_id_list2 = [multiverse_id_list1[num1], multiverse_id_list1[num2]]
+_id_list2 = [_id_list1[num1], _id_list1[num2]]
 
 # # Generate image set
-model_data = generate_img_set("my_image_set", multiverse_id_list1, multiverse_id_list2)
+model_data = generate_img_set("my_image_set", _id_list1, _id_list2)
 
 # Number of unique printings
-unique_printings = len(multiverse_id_list1)
+unique_printings = len(_id_list1)
 
 # Train the model
-#model = train_CNN_model("my_model", model_data, unique_printings, 400)
+model = train_CNN_model("my_model", model_data, unique_printings, 100)
 
 model = models.load_model('my_model.keras')
 
 model.fit(model_data[0][0], model_data[0][1], epochs=200, validation_data=(model_data[1][0], model_data[1][1]))
 
-for i in range(len(multiverse_id_list2)):
-    test_model_via_index("my_image_set", i, model, multiverse_id_list1, multiverse_id_list2)
+for i in range(len(_id_list2)):
+    test_model_via_index("my_image_set", i, model, _id_list1, _id_list2)

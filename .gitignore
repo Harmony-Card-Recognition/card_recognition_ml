@@ -3,3 +3,6 @@
 /venv
 /my_image_set
 /deck.json
+*.p
+*.keras
+/imagev2

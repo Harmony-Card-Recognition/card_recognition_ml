@@ -86,7 +86,7 @@ def get_json_length(filepath):
     return len(data)
 
 
-def create_smaller_json(filepath, image_size=-1, rand=False, verbose=True):
+def create_smaller_json(filepath, image_size=-1, verbose=True):
     if verbose: print(f"Copying {image_size} Objects ...")
     # Create a new file path for the smaller JSON file
     new_filepath = filepath.replace(".json", f"_small({image_size}).json")
@@ -96,16 +96,10 @@ def create_smaller_json(filepath, image_size=-1, rand=False, verbose=True):
         data = json.load(original_file)
 
     # If random is True, select 'image_size' random objects from the data
-    if rand and image_size == -1:
-        print(
-            f'Copying the FIRST {image_size} objects from "{filepath}" to "{new_filepath}" ...'
-        )
-        small_data = random.sample(data, image_size)
-    else:
-        print(
-            f'Copying {image_size} RANDOM (unique) objects from "{filepath}" to "{new_filepath}" ...'
-        )
-        small_data = data[:image_size]
+    if verbose: print(
+        f'Copying {image_size} objects from "{filepath}" to "{new_filepath}" ...'
+    )
+    small_data = random.sample(data, image_size)
 
     # Write the small data to the new JSON file
     with open(new_filepath, "w", encoding="utf-8") as new_file:

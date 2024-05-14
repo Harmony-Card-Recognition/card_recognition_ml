@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.calibration import LabelEncoder
 from sklearn.model_selection import train_test_split
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import requests
 from io import BytesIO
 import json
@@ -25,8 +25,12 @@ def get_datasets(json_filepath):
 
     # Download the images and convert them into numpy arrays
     for _, row in df.iterrows():
-        response = requests.get(row['image'])
-        img = Image.open(BytesIO(response.content))
+        try:
+            response = requests.get(row['image'])
+            img = Image.open(BytesIO(response.content))
+        except UnidentifiedImageError:
+            print(f'Error: UnidentifiedImageError for {row["_id"]}')
+            continue
         img_array = np.array(img)
         training_images.append(img_array)
         training_labels.append(row['_id'])
@@ -138,7 +142,10 @@ def format_image_attributes(filepath, image_size='normal'):
 
             del item['card_faces']
         else:
-            print('\n\nNO IMAGES FOUND...\n\n')
+            itemid = item['_id']
+            print(f'\n\n {itemid} NO IMAGES FOUND...\n\n')
+            continue
+
         item['image'] = image_url
 
     # Write the modified data back to the JSON file

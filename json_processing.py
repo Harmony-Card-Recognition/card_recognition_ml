@@ -57,6 +57,7 @@ def get_datasets(json_filepath):
     testing_labels = le.fit_transform(training_labels) # Convert the labels into numpy arrays and encode them as integers
 
         # # Split the data into training and testing sets
+        # # this is wrong becuase it can seperate all variations of the same card to the testing set, so the model doesn't have a label/bucket for that card
         # train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2)
 
     return training_images, testing_images, training_labels, testing_labels
@@ -69,7 +70,7 @@ def get_json_length(filepath):
         data = json.load(f)
     return len(data)
 
-def create_smaller_json(filepath, image_size='normal', rand=False):
+def create_smaller_json(filepath, image_size=-1, rand=False):
     print(f'Copying {image_size} Objects ...\n')
     # Create a new file path for the smaller JSON file  
     new_filepath = filepath.replace('.json', f'_small({image_size}).json')
@@ -79,7 +80,7 @@ def create_smaller_json(filepath, image_size='normal', rand=False):
         data = json.load(original_file)
 
     # If random is True, select 'image_size' random objects from the data
-    if rand:
+    if rand and image_size==-1:
         print(f'Copying the FIRST {image_size} objects from \"{filepath}\" to \"{new_filepath}\" ...\n')
         small_data = random.sample(data, image_size)
     else:
@@ -117,6 +118,8 @@ def format_image_attributes(filepath, image_size='normal'):
     with open(filepath, 'r') as f:
         data = json.load(f)
 
+    additional_faces_object = {}
+
 
     # Add the attribute to each dictionary
     for item in data:
@@ -131,9 +134,9 @@ def format_image_attributes(filepath, image_size='normal'):
                 if 'image_uris' in item:
                     image_url = face['image_uris'][image_size]
                     break
+                
 
             del item['card_faces']
-
         else:
             print('\n\nNO IMAGES FOUND...\n\n')
         item['image'] = image_url
@@ -142,11 +145,33 @@ def format_image_attributes(filepath, image_size='normal'):
     with open(filepath, 'w') as f:
         json.dump(data, f, indent=4)
 
+def get_random_test_datasets(filepath, count=10):
+    # Load the JSON file
+    with open(filepath, 'r') as f:
+        data = json.load(f)
+    
+    random_test_data = random.sample(data, count)
+    testing_images = []
+    testing_labels = []
+
+    for obj in random_test_data:
+        response = requests.get(obj['image'])
+        img = Image.open(BytesIO(response.content))
+        img_array = np.array(img)
+        testing_images.append(img_array)
+        testing_labels.append(obj['_id'])
+
+    testing_images = np.array(testing_images)
+    le = LabelEncoder()
+    testing_labels = le.fit_transform(testing_labels)
+
+    return testing_images, testing_labels
+    
 # ==================================================
 
-def format_json(raw_json_filepath):
+def format_json(raw_json_filepath, small_json_size):
     # create a smaller dataset (ideally with all of the images)
-    new_filepath = create_smaller_json(raw_json_filepath, 100)
+    new_filepath = create_smaller_json(raw_json_filepath, small_json_size)
 
     # for each object in the json file, remove the everything but the '_id', 'image_uris', 'card_faces' attributes
     filter_attributes_json(new_filepath)

@@ -65,13 +65,14 @@ def train_CNN_model(model_name, training_images, testing_images, training_labels
 
 
 # here, you would format the raw json data that Trent has, and then make a formatted json file
-raw_json_filepath = './.data/deckdrafterprod.MTGCard.json'
-formatted_json_filepath = format_json(raw_json_filepath)
+# raw_json_filepath = './.data/deckdrafterprod.MTGCard.json'
+# formatted_json_filepath = format_json(raw_json_filepath, -1)
+formatted_json_filepath = '.data/deckdrafterprod.MTGCard_small(-1).json'
 
 train_imgs, test_imgs, train_lbs, test_lbs = get_datasets(formatted_json_filepath)
-model_name = 'harmony_1.0.0'
+model_name = 'harmony_1.1.0'
 unique_printings = get_json_length(formatted_json_filepath)
-epochs = 10
+epochs = 200
 
 
 # =======================================================
@@ -79,6 +80,7 @@ epochs = 10
 
 model = train_CNN_model(model_name, train_imgs, test_imgs, train_lbs, test_lbs, unique_printings, epochs)
 # model = models.load_model('harmony_1.0.0.keras')
+# model.fit(train_imgs, train_lbs, epochs=epochs)
 
 
 # =======================================================

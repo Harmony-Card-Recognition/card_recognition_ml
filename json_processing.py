@@ -12,7 +12,7 @@ import random
 from image_processing import random_edit_img
 
 
-def get_datasets(json_filepath):
+def get_datasets(json_filepath, verbose=True):
     """returns the train_images, test_images, train_labels, test_labels in that order"""
     # Load the JSON file into a DataFrame
     df = pd.read_json(json_filepath)
@@ -30,7 +30,7 @@ def get_datasets(json_filepath):
             response = requests.get(row["image"])
             img = Image.open(BytesIO(response.content))
         except UnidentifiedImageError:
-            print(f'Error: UnidentifiedImageError for {row["_id"]}')
+            if verbose: print(f'Error: UnidentifiedImageError for {row["_id"]} [skipped]')
             continue
         img_array = np.array(img)
         training_images.append(img_array)
@@ -86,8 +86,8 @@ def get_json_length(filepath):
     return len(data)
 
 
-def create_smaller_json(filepath, image_size=-1, rand=False):
-    print(f"Copying {image_size} Objects ...\n")
+def create_smaller_json(filepath, image_size=-1, rand=False, verbose=True):
+    if verbose: print(f"Copying {image_size} Objects ...")
     # Create a new file path for the smaller JSON file
     new_filepath = filepath.replace(".json", f"_small({image_size}).json")
 
@@ -98,12 +98,12 @@ def create_smaller_json(filepath, image_size=-1, rand=False):
     # If random is True, select 'image_size' random objects from the data
     if rand and image_size == -1:
         print(
-            f'Copying the FIRST {image_size} objects from "{filepath}" to "{new_filepath}" ...\n'
+            f'Copying the FIRST {image_size} objects from "{filepath}" to "{new_filepath}" ...'
         )
         small_data = random.sample(data, image_size)
     else:
         print(
-            f'Copying {image_size} RANDOM (unique) objects from "{filepath}" to "{new_filepath}" ...\n'
+            f'Copying {image_size} RANDOM (unique) objects from "{filepath}" to "{new_filepath}" ...'
         )
         small_data = data[:image_size]
 
@@ -114,13 +114,14 @@ def create_smaller_json(filepath, image_size=-1, rand=False):
     # Copy the original file's permissions to the new file
     shutil.copymode(filepath, new_filepath)
 
-    print("\nFinished Copying!")
+    if verbose: print("Finished Copying!")
 
     # Return the path of the new JSON file
     return new_filepath
 
 
-def filter_attributes_json(filepath, attributes=["_id", "image_uris", "card_faces"]):
+def filter_attributes_json(filepath, attributes=["_id", "image_uris", "card_faces"], verbose=True):
+    if verbose: print(f"Filtering {filepath} with only {attributes} ...")
     # Open the original JSON file and load the data
     with open(filepath, "r", encoding="utf-8") as original_file:
         data = json.load(original_file)
@@ -134,44 +135,73 @@ def filter_attributes_json(filepath, attributes=["_id", "image_uris", "card_face
     with open(filepath, "w", encoding="utf-8") as original_file:
         json.dump(filtered_data, original_file, indent=4)
 
-    print("\nFinished filtering!")
+    if verbose: print("Finished filtering!")
 
 
-def format_image_attributes(filepath, image_size="normal"):
+def format_image_attributes(filepath, image_size="normal", verbose=True):
+    if verbose: print(f'Formatting {filepath} with {image_size} image size')
+
     # Load the JSON file
     with open(filepath, "r") as f:
         data = json.load(f)
 
-    additional_faces_object = {}
+    # new json object for duplicate card faces
+    # list of dictionaries with two values ('_id' and image url)
+    duplicate_face_objects = []
 
     # Add the attribute to each dictionary
-    for item in data:
+    for json_object in data:
         if (
-            "image_uris" in item
-        ):  # Replace 'attribute_to_delete' with the name of the attribute you want to delete
-            image_url = item["image_uris"][image_size]
-            del item["image_uris"]
-            if "card_faces" in item:
-                del item["card_faces"]
-        elif "card_faces" in item:
+            "image_uris" in json_object
+        ): # use the first images that we see (these would probably be the best)
+            image_url = json_object["image_uris"][image_size]
+            del json_object["image_uris"]
+
+            # I don't know if this will cause issues, but take these out if we already have an image
+            if "card_faces" in json_object:
+                del json_object["card_faces"]
+
+            json_object["image"] = image_url
+
+        elif "card_faces" in json_object:
             # for each image that there is in the 'card_faces', create a new json object
-            # FOR NOW i am lazy, and Im just going to use the first instance of an image
-            for face in item["card_faces"]:
-                if "image_uris" in item:
-                    image_url = face["image_uris"][image_size]
-                    break
+            new_face_objects = []
+            for i, face in enumerate(json_object["card_faces"]):
+                if "image_uris" in face:
+                    # the face that we are currently on (or else this iteration will result in an object
+                    # without an image)
+                    if i == 0:
+                        json_object['image'] = face["image_uris"][image_size]
+                    else:
+                        new_face = {}
+                        new_face['_id'] = json_object["_id"] 
+                        new_face['image'] = face["image_uris"][image_size]
 
-            del item["card_faces"]
+                        new_face_objects.append(new_face)
+            
+            if new_face_objects.count != 0:
+                duplicate_face_objects.extend(new_face_objects)
+
+                item_id = json_object["_id"]
+                if verbose: print(f'({item_id}) DUPLICATE card faces added ...')
+
+                del json_object["card_faces"]
+            else:
+                if verbose: print(f'NO IMAGES FOUND IN CARDFACES [skipped] ...')
+
         else:
-            itemid = item["_id"]
-            print(f"\n\n {itemid} NO IMAGES FOUND...\n\n")
-            continue
+            # if there is no image found for the object, just skip it for now, and print a message
+            item_id = json_object["_id"]
+            if verbose: print(f"({item_id}) NO IMAGES FOUND [skipped] ...")
 
-        item["image"] = image_url
+    # append the duplicate card faces to the end of the json file
+    data.extend(duplicate_face_objects)
 
     # Write the modified data back to the JSON file
     with open(filepath, "w") as f:
         json.dump(data, f, indent=4)
+
+    if verbose: print('Finished formatting!')
 
 
 def get_random_test_datasets(filepath, count=10):
@@ -200,14 +230,18 @@ def get_random_test_datasets(filepath, count=10):
 # ==================================================
 
 
-def format_json(raw_json_filepath, small_json_size):
+def format_json(raw_json_filepath, small_json_size, verbose=True):
     # create a smaller dataset (ideally with all of the images)
+    if verbose: print('\n--- CREATING SEPERATE JSON ---')
     new_filepath = create_smaller_json(raw_json_filepath, small_json_size)
 
     # for each object in the json file, remove the everything but the '_id', 'image_uris', 'card_faces' attributes
+    if verbose: print('\n--- FILTERINg JSON ---')
     filter_attributes_json(new_filepath)
 
     # convert the 'image_uris' and 'card_faces' to a universal 'image'
+    if verbose: print('\n--- FORMATTING JSON ATTRIBUTES ---')
     format_image_attributes(new_filepath)
 
+    if verbose: print('\n--- JSON FULLY FORMATTED ---')
     return new_filepath

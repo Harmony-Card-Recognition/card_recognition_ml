@@ -4,9 +4,8 @@ import io
 import json
 import pickle
 import keras
-import pandas as pd
 import os
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+from PIL import Image
 from urllib.request import urlopen
 import ssl
 
@@ -21,20 +20,22 @@ from IPython.display import display
 import copy
 
 from image_processing import random_edit_img
+from helper import get_current_time, get_elapsed_time
+
+# ======================================================================
+
+json_filepath = './.data/deckdrafterprod.MTGCard.json'
+
+# load json data
+def load_json_data(filepath):
+    data = None
+    with open(filepath, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return data
+
+# ======================================================================
 
 
-def get_current_time():
-    '''Help: Returns the current time as a nice string.'''
-    return strftime("%B %d, %I:%M%p", localtime())
-
-def elapsed_time(start_time):
-    '''Using seconds since epoch, determine how much time has passed since the provided float. Returns string
-    with hours:minutes:seconds'''
-    elapsed_seconds = time()-start_time
-    h = int(elapsed_seconds/3600)
-    m = int((elapsed_seconds-h*3600)/60)
-    s = int((elapsed_seconds-m*60)-h*3600)
-    return f'{h}hr {m}m {s}s'
 
 #simple function to pickle variables for later use. save a local pickle
 def save_object(obj, filename, verbose=True):
@@ -93,18 +94,16 @@ def prep_images_for_network(storage_path):
     
     return image_array, label_array
 
-# Load the JSON data
-with open('deck.json', 'r', encoding='utf-8') as f:
-    data = json.load(f)
+
 
 # Function to get image url by multiverse_id
-def get_image_url_by_multiverse_id(multiverse_id, image_size):
+def get_image_url_by_multiverse_id(multiverse_id, image_size, data):
     for item in data:
         if 'multiverse_ids' in item and 'image_uris' in item and multiverse_id in item['multiverse_ids']:
             return item['image_uris'][image_size]
     return None
 
-def generate_imgs(multiverse_id_list, storage_path):
+def generate_imgs(multiverse_id_list, storage_path, data):
     '''Help: High level function to reduce the testing & training image creation process down to a single step. 
     Provide a string list of multiverse_ids, the number of distortions desired for each printing, a general 
     storage location for the image files, and the final image size desired. Creates "poorly photographed" 
@@ -123,9 +122,9 @@ def generate_imgs(multiverse_id_list, storage_path):
         if (storage_path.__contains__("Testing")):
             print(multiverse_id[0])
             print(multiverse_id[1])
-            image_url = get_image_url_by_multiverse_id(multiverse_id[0], image_size)
+            image_url = get_image_url_by_multiverse_id(multiverse_id[0], image_size, data)
         else:
-            image_url = get_image_url_by_multiverse_id(multiverse_id, image_size)
+            image_url = get_image_url_by_multiverse_id(multiverse_id, image_size, data)
         if image_url == None:
             continue
 
@@ -148,7 +147,7 @@ def generate_imgs(multiverse_id_list, storage_path):
     print(f"\n{images_created} total unique distortions saved from {printings_distorted} different printings.")
     print(f"Images stored @ '{storage_path}'\n")
 
-def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_list_test, resize=True, verbose=True):
+def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_list_test, data, resize=True, verbose=True):
     '''Help: Given appropriate parameters, generate num_distortions distorted image copies of each card in 
     multiverse_id_list. Then prep all the images for neural net training and save the resulting arrays.
     Returns model_data: ((training_images, training_labels), (testing_images, testing_labels))
@@ -181,7 +180,7 @@ def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_lis
     training_storage_path = f"{image_set_name}/Training"
 
     #generate the images
-    generate_imgs(multiverse_id_list_train, training_storage_path)
+    generate_imgs(multiverse_id_list_train, training_storage_path, data)
 
     if verbose:
         print(f"Training images finished on {get_current_time()}, now generating {len(multiverse_id_list_train)*2} testing images ...")
@@ -190,7 +189,7 @@ def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_lis
     testing_storage_path = f"{image_set_name}/Testing"
 
     #generate the images
-    generate_imgs(multiverse_id_list_test, testing_storage_path)
+    generate_imgs(multiverse_id_list_test, testing_storage_path, data)
 
     if verbose:
         print(f"All images created and saved under {image_set_name} on {get_current_time()}. \nFormatting images and labels for neural net processing now ...")
@@ -204,9 +203,11 @@ def generate_img_set(image_set_name, multiverse_id_list_train, multiverse_id_lis
     save_object(model_data, f'{image_set_name} Arrays.p', verbose=False)
 
     if verbose:
-        print(f"Pre processing complete on {get_current_time()} after {elapsed_time(start_time)}.\n\nTraining & testing data saved locally ({image_set_name} Arrays.p) and ready for neural network!\n\n")
+        print(f"Pre processing complete on {get_current_time()} after {get_elapsed_time(start_time)}.\n\nTraining & testing data saved locally ({image_set_name} Arrays.p) and ready for neural network!\n\n")
 
     return model_data
+
+# ============================================================================
 
 
 def train_CNN_model(model_name, model_data, unique_printings, epochs=10, verbose=True):
@@ -262,7 +263,7 @@ def train_CNN_model(model_name, model_data, unique_printings, epochs=10, verbose
     model.save(f'{model_name}.keras')
 
     if verbose:
-        print(f"\nModel evaluated & saved locally at '{model_name}.model' on {get_current_time()} after {elapsed_time(model_start_time)}!\n")
+        print(f"\nModel evaluated & saved locally at '{model_name}.model' on {get_current_time()} after {get_elapsed_time(model_start_time)}!\n")
 
     return model
 
@@ -297,7 +298,7 @@ with {np.round(confidence*100,4)}% confidence. (INCORRECT)')
         #display(test_card, Image.open(f'{image_set_name}/Testing/{result_index}-sub_index.jpg'))
 
 #function to randomly select 100 multiverse IDs from deck.json
-def random_multiverse_ids(times=25):
+def random_multiverse_ids(data, times=25):
     '''Help: Randomly select 100 multiverse IDs from deck.json and return them as a list.'''
     multiverse_ids = []
     count = 0
@@ -312,44 +313,42 @@ def test_model(model, test_data, test_labels):
     test_loss, test_acc = model.evaluate(test_data, test_labels, verbose=2)
     print('\nTest Accuracy: ', test_acc) 
 
-# #List of multiverse IDs
-# multiverse_id_list1 = random_multiverse_ids(100)
 
+
+# =========================================================
+
+processed_json_data = load_json_data(json_filepath)
+
+# #List of multiverse IDs
+# multiverse_id_list1 = random_multiverse_ids(processed_json_data, 100)
 # multiverse_id_list2 = []
 # #pick random number between 1 - 95
 # for i in range(15):
 #     num = random.randint(1, 95)
 #     multiverse_id_list2.append([multiverse_id_list1[num], num])
-
 # print(multiverse_id_list2)
-
-
 # # Generate image set
-#model_data = generate_img_set("imagev2", multiverse_id_list1, multiverse_id_list2)
-
-# Number of unique printings
-#unique_printings = len(multiverse_id_list1)
-
-# Train the model
-#model = train_CNN_model("modelv2", model_data, unique_printings, 50)
+# model_data = generate_img_set("imagev2", multiverse_id_list1, multiverse_id_list2, processed_json_data)
+# # Number of unique printings
+# unique_printings = len(multiverse_id_list1)
+# # Train the model
+# model = train_CNN_model("modelv2", model_data, unique_printings, 25)
 
 model_data = load_object('imagev2 Arrays.p')
-
 model = models.load_model('modelv2.keras')
-
 model.fit(model_data[0][0], model_data[0][1], epochs=1, validation_data=(model_data[1][0], model_data[1][1]))
 
-print(model_data[0][1])
-print(model_data[1][1])
 
-#test_model(model, model_data[1][0], model_data[1][1])
-#model.evaluate()
 
+test_model(model, model_data[1][0], model_data[1][1])
+
+## model.evaluate()
+# print(model_data[0][1])
+# print(model_data[1][1])
 # print(model.summary())
-
 # print(multiverse_id_list1)
 # print(multiverse_id_list2)
 
 
-for i in range(len(model_data[1][1])):
-    test_model_via_index("imagev2", model_data[1][1][i], model)
+# for i in range(len(model_data[1][1])):
+#     test_model_via_index("imagev2", model_data[1][1][i], model)

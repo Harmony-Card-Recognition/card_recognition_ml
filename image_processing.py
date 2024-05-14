@@ -1,9 +1,6 @@
-import os
 import random
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
-
-
+from PIL import Image, ImageFilter, ImageEnhance
 
 def zoom_rotate_img(image):
     '''Help: Randomly rotate and zoom the given PIL image degrees and return it'''
@@ -62,7 +59,9 @@ def adjust_sharpness(image):
     sharpness = random.choice([.5, 1.5])
     return converter.enhance(sharpness)
 
-def random_edit_img(image, distort=True, verbose=True):
+# =====================================================
+
+def random_edit_img(image, distort=True, verbose=False):
     '''Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
     the image if need be.'''
     
@@ -93,7 +92,4 @@ def random_edit_img(image, distort=True, verbose=True):
     
     return image
 
-
-
-# =====================================================
 

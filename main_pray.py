@@ -4,6 +4,7 @@ from time import time
 
 import keras
 from keras import callbacks, layers, models
+import numpy as np
 
 from helper import get_current_time, get_elapsed_time
 from json_processing import format_json, get_datasets, get_json_length
@@ -18,6 +19,7 @@ def train_CNN_model(
     unique_printings,
     callbacks,
     verbose=True,
+    epochs=1000,
 ):
     """Help: Create and train a CNN model for the provided model_data"""
 
@@ -63,6 +65,7 @@ def train_CNN_model(
     model.fit(
         training_images,
         training_labels,
+        epochs=epochs,
         callbacks=callbacks,
         validation_data=(testing_images, testing_labels),
     )
@@ -85,6 +88,17 @@ def train_CNN_model(
 
     return model
 
+def test_model(model, testing_images, testing_labels):
+    
+    for i in range(len(testing_images)):
+        img = testing_images[i]
+        label = testing_labels[i]
+        img = np.array([img])
+        result = model.predict(img)
+        prediction = np.argmax(result)
+        confidence = result[0][prediction]
+        print(f"Prediction: {prediction} | Actual: {label} | Confidence: {np.round(confidence*100,4)}")
+
 
 # =======================================================
 
@@ -104,9 +118,9 @@ class AccuracyThresholdCallback(callbacks.Callback):
 
 
 # here, you would format the raw json data that Trent has, and then make a formatted json file
-raw_json_filepath = './.data/deckdrafterprod.MTGCard.json'
-formatted_json_filepath = format_json(raw_json_filepath, -1)
-# formatted_json_filepath = ".data/deckdrafterprod.MTGCard_small(-1).json"
+# raw_json_filepath = './.data/deckdrafterprod.MTGCard.json'
+# formatted_json_filepath = format_json(raw_json_filepath, -1)
+formatted_json_filepath = ".data/deckdrafterprod.MTGCard_small(50).json"
 
 train_imgs, test_imgs, train_lbs, test_lbs = get_datasets(formatted_json_filepath)
 model_name = "harmony_1.1.0"
@@ -118,15 +132,15 @@ accuracy_threshold_callback = AccuracyThresholdCallback(threshold=0.95)
 # =======================================================
 
 
-# model = train_CNN_model(
-#     model_name,
-#     train_imgs,
-#     test_imgs,
-#     train_lbs,
-#     test_lbs,
-#     unique_printings,
-#     callbacks=[accuracy_threshold_callback],
-# )
+model = train_CNN_model(
+    model_name,
+    train_imgs,
+    test_imgs,
+    train_lbs,
+    test_lbs,
+    unique_printings,
+    callbacks=[accuracy_threshold_callback],
+)
 
 
 # model = models.load_model('harmony_1.0.0.keras')
@@ -134,3 +148,4 @@ accuracy_threshold_callback = AccuracyThresholdCallback(threshold=0.95)
 
 
 # Model is tested above
+test_model(model, test_imgs, test_lbs)

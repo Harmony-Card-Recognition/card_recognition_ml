@@ -36,7 +36,7 @@ def get_datasets(json_filepath, verbose=True):
         training_images.append(img_array)
         training_labels.append(row["_id"])
 
-        for _ in range(5):
+        for _ in range(4):
             distorted_img = random_edit_img(img)
             distorted_img_array = np.array(distorted_img)
             training_images.append(distorted_img_array)
@@ -45,13 +45,16 @@ def get_datasets(json_filepath, verbose=True):
             )  # The label for the distorted image is the same as the original image
 
         # create n different UNSEEN variants of the 'perfect' cards for testing
-        for _ in range(2):
-            distorted_img = random_edit_img(img)
-            distorted_img_array = np.array(distorted_img)
-            testing_images.append(distorted_img_array)
-            testing_labels.append(
-                row["_id"]
-            )  # The label for the distorted image is the same as the original image
+        # for _ in range(2):
+        #     distorted_img = random_edit_img(img)
+        #     distorted_img_array = np.array(distorted_img)
+        #     testing_images.append(distorted_img_array)
+        #     testing_labels.append(
+        #         row["_id"]
+        #     )  # The label for the distorted image is the same as the original image
+
+        testing_images.append(img)
+        testing_labels.append(row['id'])
 
     # Convert TRAINING LISTS into numpy arrays
     training_images = np.array(training_images)
@@ -138,6 +141,7 @@ def filter_attributes_json(filepath, attributes=["_id", "image_uris", "card_face
 
 
 def format_image_attributes(filepath, image_size="normal", verbose=True):
+    unique_ids = 0
     if verbose: print(f'Formatting {filepath} with {image_size} image size')
 
     # Load the JSON file
@@ -150,13 +154,12 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
 
     # Add the attribute to each dictionary
     for json_object in data:
-        if (
-            "image_uris" in json_object
-        ): # use the first images that we see (these would probably be the best)
+        if ("image_uris" in json_object): # use the first images that we see (these would probably be the best)
             new_face = {}
             new_face['_id'] = json_object["_id"] 
             new_face['image'] = json_object["image_uris"][image_size]
             new_data.append(new_face)
+            unique_ids += 1
 
         elif "card_faces" in json_object:
             # for each image that there is in the 'card_faces', create a new json object
@@ -165,14 +168,17 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
                 if "image_uris" in face:
                     # the face that we are currently on (or else this iteration will result in an object
                     # without an image)
+                    
                     if i == 0:
                         json_object['image'] = face["image_uris"][image_size]
+                        unique_ids += 1
                     else:
                         new_face = {}
                         new_face['_id'] = json_object["_id"] 
                         new_face['image'] = face["image_uris"][image_size]
 
                         new_face_objects.append(new_face)
+                        unique_ids += 1
             
             if new_face_objects.count != 0:
                 new_data.extend(new_face_objects)
@@ -180,7 +186,6 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
                 item_id = json_object["_id"]
                 if verbose: print(f'({item_id}) DUPLICATE card faces added ...')
 
-                # del json_object["card_faces"]
             else:
                 if verbose: print(f'NO IMAGES FOUND IN CARDFACES [skipped] ...')
 
@@ -190,14 +195,13 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
             if verbose: print(f"({item_id}) NO IMAGES FOUND [skipped] ...")
             
 
-    # append the duplicate card faces to the end of the json file
-    # data.extend(duplicate_face_objects)
 
     # Write the modified data back to the JSON file
     with open(filepath, "w") as f:
         json.dump(new_data, f, indent=4)
 
     if verbose: print('Finished formatting!')
+    return unique_ids
 
 
 def get_random_test_datasets(filepath, count=10):

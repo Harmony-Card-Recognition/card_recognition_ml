@@ -95,11 +95,16 @@ def create_smaller_json(filepath, image_size=-1, verbose=True):
     with open(filepath, "r", encoding="utf-8") as original_file:
         data = json.load(original_file)
 
-    # If random is True, select 'image_size' random objects from the data
-    if verbose: print(
-        f'Copying {image_size} objects from "{filepath}" to "{new_filepath}" ...'
-    )
-    small_data = random.sample(data, image_size)
+    if image_size == -1:
+        if verbose: print(
+            f'Copying ALL objects from "{filepath}" to "{new_filepath}" ...'
+        )
+        small_data = data
+    else:
+        if verbose: print(
+            f'Copying {image_size} objects from "{filepath}" to "{new_filepath}" ...'
+        )
+        small_data = random.sample(data, image_size)
 
     # Write the small data to the new JSON file
     with open(new_filepath, "w", encoding="utf-8") as new_file:
@@ -141,21 +146,17 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
 
     # new json object for duplicate card faces
     # list of dictionaries with two values ('_id' and image url)
-    duplicate_face_objects = []
+    new_data = []
 
     # Add the attribute to each dictionary
     for json_object in data:
         if (
             "image_uris" in json_object
         ): # use the first images that we see (these would probably be the best)
-            image_url = json_object["image_uris"][image_size]
-            del json_object["image_uris"]
-
-            # I don't know if this will cause issues, but take these out if we already have an image
-            if "card_faces" in json_object:
-                del json_object["card_faces"]
-
-            json_object["image"] = image_url
+            new_face = {}
+            new_face['_id'] = json_object["_id"] 
+            new_face['image'] = json_object["image_uris"][image_size]
+            new_data.append(new_face)
 
         elif "card_faces" in json_object:
             # for each image that there is in the 'card_faces', create a new json object
@@ -174,12 +175,12 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
                         new_face_objects.append(new_face)
             
             if new_face_objects.count != 0:
-                duplicate_face_objects.extend(new_face_objects)
+                new_data.extend(new_face_objects)
 
                 item_id = json_object["_id"]
                 if verbose: print(f'({item_id}) DUPLICATE card faces added ...')
 
-                del json_object["card_faces"]
+                # del json_object["card_faces"]
             else:
                 if verbose: print(f'NO IMAGES FOUND IN CARDFACES [skipped] ...')
 
@@ -187,13 +188,14 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
             # if there is no image found for the object, just skip it for now, and print a message
             item_id = json_object["_id"]
             if verbose: print(f"({item_id}) NO IMAGES FOUND [skipped] ...")
+            
 
     # append the duplicate card faces to the end of the json file
-    data.extend(duplicate_face_objects)
+    # data.extend(duplicate_face_objects)
 
     # Write the modified data back to the JSON file
     with open(filepath, "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(new_data, f, indent=4)
 
     if verbose: print('Finished formatting!')
 

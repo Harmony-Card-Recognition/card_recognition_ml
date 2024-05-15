@@ -54,7 +54,7 @@ def get_datasets(json_filepath, verbose=True):
         #     )  # The label for the distorted image is the same as the original image
 
         testing_images.append(img)
-        testing_labels.append(row['id'])
+        testing_labels.append(row['_id'])
 
     # Convert TRAINING LISTS into numpy arrays
     training_images = np.array(training_images)
@@ -241,7 +241,7 @@ def format_json(raw_json_filepath, small_json_size, verbose=True):
 
     # convert the 'image_uris' and 'card_faces' to a universal 'image'
     if verbose: print('\n--- FORMATTING JSON ATTRIBUTES ---')
-    format_image_attributes(new_filepath)
+    unique_printings = format_image_attributes(new_filepath)
 
     if verbose: print('\n--- JSON FULLY FORMATTED ---')
-    return new_filepath
+    return new_filepath, unique_printings

@@ -118,12 +118,12 @@ class AccuracyThresholdCallback(callbacks.Callback):
 
 # here, you would format the raw json data that Trent has, and then make a formatted json file
 raw_json_filepath = './.data/deckdrafterprod.MTGCard.json'
-formatted_json_filepath = format_json(raw_json_filepath, -1)
+formatted_json_filepath, unique_printings = format_json(raw_json_filepath, -1)
 # formatted_json_filepath = ".data/deckdrafterprod.MTGCard_small(50).json"
 
 train_imgs, test_imgs, train_lbs, test_lbs = get_datasets(formatted_json_filepath)
 model_name = "harmony_1.1.0"
-unique_printings = get_json_length(formatted_json_filepath)
+# unique_printings = get_json_length(formatted_json_filepath)
 
 # Create a callback that stops training when accuracy reaches 98%
 accuracy_threshold_callback = AccuracyThresholdCallback(threshold=0.95)
@@ -136,7 +136,7 @@ model = train_CNN_model(
     test_imgs,
     train_lbs,
     test_lbs,
-    unique_printings,
+    2,
     callbacks=[accuracy_threshold_callback],
 )
 

@@ -36,7 +36,7 @@ def get_datasets(json_filepath):
         training_images.append(img_array)
         training_labels.append(row["_id"])
 
-        for _ in range(5):
+        for _ in range(4):
             distorted_img = random_edit_img(img)
             distorted_img_array = np.array(distorted_img)
             training_images.append(distorted_img_array)
@@ -44,14 +44,17 @@ def get_datasets(json_filepath):
                 row["_id"]
             )  # The label for the distorted image is the same as the original image
 
-        # create n different UNSEEN variants of the 'perfect' cards for testing
-        for _ in range(2):
-            distorted_img = random_edit_img(img)
-            distorted_img_array = np.array(distorted_img)
-            testing_images.append(distorted_img_array)
-            testing_labels.append(
-                row["_id"]
-            )  # The label for the distorted image is the same as the original image
+        # # create n different UNSEEN variants of the 'perfect' cards for testing
+        # for _ in range(2):
+        #     distorted_img = random_edit_img(img)
+        #     distorted_img_array = np.array(distorted_img)
+        #     testing_images.append(distorted_img_array)
+        #     testing_labels.append(
+        #         row["_id"]
+        #     )  # The label for the distorted image is the same as the original image
+
+        testing_images.append(img)
+        testing_labels.append(row["_id"])
 
     # Convert TRAINING LISTS into numpy arrays
     training_images = np.array(training_images)

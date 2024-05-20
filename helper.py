@@ -1,6 +1,30 @@
 from time import localtime, strftime, time
+import os
+import json
 
+# =======================================
+# LOGGING
+def log_and_verbose(message, log_dir, verbose):
+    # log it in a text file
+    with open(os.path.join(log_dir, "log.txt"), "a") as f:
+        f.write(f"{get_current_time()}: {message}\n")
 
+    # if verbose, print it
+    if verbose: print(message)
+
+# =======================================
+# JSON
+
+def get_json_length(json_filepath):
+    # Open the JSON file
+    with open(json_filepath, 'r', encoding='utf-8') as f:
+        # Load the JSON data
+        data = json.load(f)
+
+    # Count the number of JSON objects
+    num_objects = len(data)
+
+    print(f'There are {num_objects} JSON objects in the file.')
 # =======================================
 # TIME
 

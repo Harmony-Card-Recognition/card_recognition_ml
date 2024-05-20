@@ -1,3 +1,4 @@
+import os
 import shutil
 import pandas as pd
 import numpy as np
@@ -12,71 +13,122 @@ import random
 from image_processing import random_edit_img
 
 
-def get_datasets(json_filepath, verbose=True):
+
+
+def get_datasets(json_filepath, model_filepath, verbose=True):
     """returns the train_images, test_images, train_labels, test_labels in that order"""
     # Load the JSON file into a DataFrame
     df = pd.read_json(json_filepath)
 
-    # Initialize lists to store the image data and labels
-    training_images = []
+    # Initialize lists to store the labels
     training_labels = []
-
-    testing_images = []
     testing_labels = []
 
-    # Download the images and convert them into numpy arrays
-    for _, row in df.iterrows():
+    # Create directories to store the training and testing images
+    if verbose: print('Creating image directories ...')
+    train_image_dir = os.path.join(model_filepath, 'train_images')
+    test_image_dir = os.path.join(model_filepath, 'test_images')
+    os.makedirs(train_image_dir, exist_ok=True)
+    os.makedirs(test_image_dir, exist_ok=True)
+
+    # Download the images and save them to files
+    if verbose: print('Populating images ...')
+    json_length = len(df)
+    for index, row in df.iterrows():
+        if verbose: print(f'\nProcessing {row["_id"]} - image{index}/{json_length} ...') 
         try:
             response = requests.get(row["image"])
             img = Image.open(BytesIO(response.content))
         except UnidentifiedImageError:
             if verbose: print(f'Error: UnidentifiedImageError for {row["_id"]}')
             continue
-        img_array = np.array(img)
-        training_images.append(img_array)
+
+        # Save the original image to a file, using the index as the filename
+        img_path = os.path.join(train_image_dir, f'{index}.png')
+        img.save(img_path)
+
+        # Add the label to the training labels list
         training_labels.append(row["_id"])
 
-        for _ in range(4):
+        # Create distorted versions of the image for training
+        for i in range(4):
             distorted_img = random_edit_img(img)
-            distorted_img_array = np.array(distorted_img)
-            training_images.append(distorted_img_array)
-            training_labels.append(
-                row["_id"]
-            )  # The label for the distorted image is the same as the original image
+            distorted_img_path = os.path.join(train_image_dir, f'{index}_distorted({i}).png')
+            distorted_img.save(distorted_img_path)
+            training_labels.append(row["_id"])
+            # if verbose: print(f' distorted ({i})')
 
-        # # create n different UNSEEN variants of the 'perfect' cards for testing
-        # for _ in range(2):
-        #     distorted_img = random_edit_img(img)
-        #     distorted_img_array = np.array(distorted_img)
-        #     testing_images.append(distorted_img_array)
-        #     testing_labels.append(
-        #         row["_id"]
-        #     )  # The label for the distorted image is the same as the original image
-
-        testing_images.append(img)
+        # Save the original image to the testing images directory
+        # WE CAN TAKE THIS OUT LATER IF WE WANT!!!!!!!!!!!!!!!!!!!!!
+        # if verbose: print('Saving to testing directory ...')
+        test_img_path = os.path.join(test_image_dir, f'{index}.png')
+        img.save(test_img_path)
         testing_labels.append(row["_id"])
 
-    # Convert TRAINING LISTS into numpy arrays
-    training_images = np.array(training_images)
-    # labels = np.array(labels) # this gave an issue because the labels must be ingegers... not strings
-    le = LabelEncoder()  # Initialize the label encoder
-    training_labels = le.fit_transform(
-        training_labels
-    )  # Convert the labels into numpy arrays and encode them as integers
+    # Convert the labels into numpy arrays and encode them as integers
+    if verbose: print('Hashing labels to le.fit integers ...')
+    le = LabelEncoder()
+    training_labels = le.fit_transform(training_labels)
+    testing_labels = le.fit_transform(testing_labels)
+    
+    # Save the labels to CSV files
+    if verbose: print('Saving labels as CSV ...')
+    train_labels_df = pd.DataFrame(training_labels, columns=['label'])
+    test_labels_df = pd.DataFrame(testing_labels, columns=['label'])
+    train_labels_df.to_csv(os.path.join(model_filepath, 'train_labels.csv'), index=False)
+    test_labels_df.to_csv(os.path.join(model_filepath, 'test_labels.csv'), index=False)
 
-    # Convert TESTING LISTS into numpy arrays
-    testing_images = np.array(training_images)
-    # labels = np.array(labels) # this gave an issue because the labels must be ingegers... not strings
-    le = LabelEncoder()  # Initialize the label encoder
-    testing_labels = le.fit_transform(
-        training_labels
-    )  # Convert the labels into numpy arrays and encode them as integers
+    if verbose: print('Finished creating the datasets!')
+    # The function now returns the paths to the image directories and the labels CSV files
+    return train_image_dir, test_image_dir, os.path.join(model_filepath, 'train_labels.csv'), os.path.join(model_filepath, 'test_labels.csv')
 
-    # # Split the data into training and testing sets
-    # # this is wrong becuase it can seperate all variations of the same card to the testing set, so the model doesn't have a label/bucket for that card
-    # train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2)
+def get_train_only_dataset(json_filepath, model_filepath, verbose=True):
+    """returns the train_images, test_images, train_labels, test_labels in that order"""
+    # Load the JSON file into a DataFrame
+    df = pd.read_json(json_filepath)
 
-    return training_images, testing_images, training_labels, testing_labels
+    # Initialize lists to store the labels
+    training_labels = []
+
+    # Create directories to store the training and testing images
+    if verbose: print('Creating image directories ...')
+    train_image_dir = os.path.join(model_filepath, 'train_images')
+    os.makedirs(train_image_dir, exist_ok=True)
+
+    # Download the images and save them to files
+    if verbose: print('Populating images ...')
+    json_length = len(df)
+    for index, row in df.iterrows():
+        if verbose: print(f'\nProcessing {row["_id"]} - image{index}/{json_length} ...') 
+        try:
+            response = requests.get(row["image"])
+            img = Image.open(BytesIO(response.content))
+        except UnidentifiedImageError:
+            if verbose: print(f'Error: UnidentifiedImageError for {row["_id"]}')
+            continue
+
+        # Save the original image to a file, using the index as the filename
+        img_path = os.path.join(train_image_dir, f'{index}.png')
+        img.save(img_path)
+
+        # Add the label to the training labels list
+        training_labels.append(row["_id"])
+
+
+    # Convert the labels into numpy arrays and encode them as integers
+    if verbose: print('Hashing labels to le.fit integers ...')
+    le = LabelEncoder()
+    training_labels = le.fit_transform(training_labels)
+    
+    # Save the labels to CSV files
+    if verbose: print('Saving labels as CSV ...')
+    train_labels_df = pd.DataFrame(training_labels, columns=['label'])
+    train_labels_df.to_csv(os.path.join(model_filepath, 'train_labels.csv'), index=False)
+
+    if verbose: print('Finished creating the datasets!')
+    # The function now returns the paths to the image directories and the labels CSV files
+    return train_image_dir, os.path.join(model_filepath, 'train_labels.csv')
+
 
 
 # ==================================================
@@ -142,7 +194,7 @@ def filter_attributes_json(filepath, attributes=["_id", "image_uris", "card_face
 
 
 def format_image_attributes(filepath, image_size="normal", verbose=True):
-    unique_ids = 0
+    # unique_ids = 0
     if verbose: print(f'Formatting {filepath} with {image_size} image size')
 
     # Load the JSON file
@@ -160,7 +212,7 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
             new_face['_id'] = json_object["_id"] 
             new_face['image'] = json_object["image_uris"][image_size]
             new_data.append(new_face)
-            unique_ids += 1
+            # unique_ids += 1
 
         elif "card_faces" in json_object:
             # for each image that there is in the 'card_faces', create a new json object
@@ -181,7 +233,7 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
             
             if new_face_objects.count != 0:
                 new_data.extend(new_face_objects)
-                unique_ids += 1
+                # unique_ids += 1
 
 
                 item_id = json_object["_id"]
@@ -203,12 +255,11 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
         json.dump(new_data, f, indent=4)
 
     if verbose: print('Finished formatting!')
-    return unique_ids
 
 # ==================================================
 
 
-def format_json(raw_json_filepath, small_json_size, verbose=True):
+def format_json(raw_json_filepath, small_json_size, image_size="normal", verbose=True):
     # create a smaller dataset (ideally with all of the images)
     if verbose: print('\n--- CREATING SEPERATE JSON ---')
     new_filepath = create_smaller_json(raw_json_filepath, small_json_size)
@@ -219,7 +270,7 @@ def format_json(raw_json_filepath, small_json_size, verbose=True):
 
     # convert the 'image_uris' and 'card_faces' to a universal 'image'
     if verbose: print('\n--- FORMATTING JSON ATTRIBUTES ---')
-    unique_ids = format_image_attributes(new_filepath)
+    format_image_attributes(new_filepath, image_size)
 
     if verbose: print('\n--- JSON FULLY FORMATTED ---')
-    return new_filepath, unique_ids
+    return new_filepath

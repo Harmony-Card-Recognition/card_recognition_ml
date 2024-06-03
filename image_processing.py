@@ -1,10 +1,13 @@
 import random
 import numpy as np
 from PIL import Image, ImageFilter, ImageEnhance
+from keras import preprocessing, applications
+import tensorflow as tf
 
 
 def zoom_rotate_img(image):
     """Help: Randomly rotate and zoom the given PIL image degrees and return it"""
+
     # store initial image size
     initial_size = image.size
     # determine at random how much or little we scale the image
@@ -32,10 +35,6 @@ def zoom_rotate_img(image):
         ),
         center_box,
     )
-
-    # potentially flip the image 180 degrees
-    if random.choice([True, False]):
-        background = background.rotate(180)
 
     return background
 
@@ -76,6 +75,11 @@ def random_edit_img(image, distort=True, verbose=False):
     """Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
     the image if need be."""
 
+    # convert image to RGB if it's not already
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+        
+
     if distort:
         # randomly choose which editing operations to perform
         edit_permission = np.random.choice(a=[False, True], size=(4))
@@ -102,3 +106,14 @@ def random_edit_img(image, distort=True, verbose=False):
                 print("Image sharpness adjusted")
 
     return image
+
+
+
+
+def load_image(image_path, img_width, img_height):
+    img = tf.io.read_file(image_path)
+    img = tf.image.decode_jpeg(img, channels=3)
+    img = tf.image.resize(img, [img_width, img_height])
+    img = img / 255.0
+    # img = tf.expand_dims(img, axis=0)
+    return img

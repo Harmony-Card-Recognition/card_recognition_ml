@@ -1,191 +1,319 @@
-from io import BytesIO
-import json
 import os
-import shutil
-from time import time
-from tkinter import Image
+import time as time
+import pandas as pd
+import tensorflow as tf
 
-from PIL import UnidentifiedImageError, Image
-import keras
-from keras import callbacks, layers, models
-import numpy as np
-import requests
-from sklearn.calibration import LabelEncoder
+from PIL import Image
+from keras import callbacks, layers, models, optimizers
+from callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback
 
+from image_processing import load_image
 from helper import get_current_time, get_elapsed_time
-from json_processing import format_json, get_datasets, get_json_length
+from json_processing import format_json, get_datasets
 
 
-def train_CNN_model(
-    model_name,
-    training_images,
-    testing_images,
-    training_labels,
-    testing_labels,
+
+
+
+def bad_create_dataset(image_dir, labels, img_width, img_height, batch_size):
+    # Get the list of filenames and sort it
+    filenames = sorted(os.listdir(image_dir))
+    
+    # Join the filenames with the directory path
+    image_paths = [os.path.join(image_dir, f) for f in filenames]
+    
+    image_paths = tf.convert_to_tensor(image_paths)
+    labels = tf.convert_to_tensor(labels)
+
+    dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
+    dataset = dataset.map(lambda image, label: (load_image(image, img_width, img_height), label))
+    dataset = dataset.batch(batch_size)
+    return dataset
+
+def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
+    # Load the CSV file
+    df = pd.read_csv(csv_file)
+
+    # Get the filenames and labels from the CSV file
+    filenames = df['filename'].tolist()
+    labels = df['label'].tolist()
+
+    # Join the filenames with the directory path
+    image_paths = [os.path.join(image_dir, f) for f in filenames]
+
+    image_paths = tf.convert_to_tensor(image_paths)
+    labels = tf.convert_to_tensor(labels)
+
+    dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
+    dataset = dataset.map(lambda image, label: (load_image(image, img_width, img_height), label))
+    dataset = dataset.batch(batch_size)
+    return dataset
+
+
+def train_new_CNN_model(
+    model_filepath,
+    train_image_dir,
+    test_image_dir,
+    train_labels_csv,
+    test_labels_csv,
     unique_printings,
     callbacks,
     verbose=True,
     epochs=1000,
 ):
     """Help: Create and train a CNN model for the provided model_data"""
+    model_start_time = time.time()
 
-    if verbose:
-        print(f"Initializing {model_name} on {get_current_time()} ...")
-        model_start_time = time()
 
-    # if the folder already exists, delete it so we can start fresh
-    if os.path.exists(f"{model_name}.model"):
-        shutil.rmtree(f"{model_name}.model")
+    img = Image.open(f'{train_image_dir}/0.png')
+    img_width, img_height = img.size
 
+
+
+    # Define the model
+    if verbose: print('Defining the model ...')
+    # works up to 90...
+    # model = models.Sequential()
+    # model.add(layers.Conv2D(32, (3, 3), activation="relu", input_shape=(img_width, img_height, 3)))
+    # model.add(layers.MaxPooling2D(2, 2))
+    # model.add(layers.Conv2D(64, (3, 3), activation="relu"))
+    # model.add(layers.MaxPooling2D(2, 2))
+    # model.add(layers.Conv2D(128, (3, 3), activation="relu"))
+    # model.add(layers.MaxPooling2D(2, 2))
+    # model.add(layers.Conv2D(128, (3, 3), activation="relu"))
+    # model.add(layers.MaxPooling2D(2, 2))
+    # model.add(layers.Conv2D(256, (3, 3), activation="relu"))
+    # model.add(layers.MaxPooling2D(2, 2))
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(1024, activation="relu"))
+    # model.add(layers.Dropout(0.5))
+    # model.add(layers.Dense(unique_printings, activation="softmax"))
+
+    # leaky ReLU
     model = models.Sequential()
-    model.add(
-        layers.Conv2D(
-            32, (3, 3), activation="relu", input_shape=training_images.shape[1:]
-        )
-    )
+    model.add(layers.Conv2D(32, (3, 3), input_shape=(img_width, img_height, 3)))
+    model.add(layers.LeakyReLU(alpha=0.01))
     model.add(layers.MaxPooling2D(2, 2))
-    model.add(layers.Conv2D(64, (3, 3), activation="relu"))
+
+    model.add(layers.Conv2D(64, (3, 3)))
+    model.add(layers.LeakyReLU(alpha=0.01))
     model.add(layers.MaxPooling2D(2, 2))
-    model.add(layers.Conv2D(128, (3, 3), activation="relu"))
+
+    model.add(layers.Conv2D(128, (3, 3)))
+    model.add(layers.LeakyReLU(alpha=0.01))
     model.add(layers.MaxPooling2D(2, 2))
-    model.add(layers.Conv2D(128, (3, 3), activation="relu"))
+
+    model.add(layers.Conv2D(128, (3, 3)))
+    model.add(layers.LeakyReLU(alpha=0.01))
     model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Conv2D(256, (3, 3)))
+    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
     model.add(layers.Flatten())
-    model.add(layers.Dense(512, activation="relu"))
+    model.add(layers.Dense(1024))
+    model.add(layers.LeakyReLU(alpha=0.01))
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(unique_printings, activation="softmax"))
 
     # Define the optimizer
-    optimizer = keras.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
+    optimizer = optimizers.Adam(learning_rate=0.0001, beta_1=0.9, beta_2=0.999)
 
-    # compile the model
-    model.compile(
-        optimizer=optimizer,
-        loss="sparse_categorical_crossentropy",
-        metrics=["accuracy"],
-    )
+    # Compile the model
+    model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
-    if verbose:
-        print("Network compiled, fitting data now ... \n")
-    # fit the model to the provided data
-    model.fit(
-        training_images,
-        training_labels,
+    if verbose: print("Network compiled, fitting data now ... \n")
+
+    return fit_model(
+        model,
+        model_filepath,
+        train_image_dir,
+        test_image_dir,
+        train_labels_csv,
+        test_labels_csv,
+        callbacks,
+        model_start_time=model_start_time,
+        verbose=verbose,
         epochs=epochs,
-        callbacks=callbacks,
-        validation_data=(testing_images, testing_labels),
     )
 
-    if verbose:
-        print("\nModel fit, elvaluating accuracy and saving locally now ... \n")
-    # evaluate the model
 
-    loss, accuracy = model.evaluate(testing_images, testing_labels)
+
+def fit_model(
+    model,
+    model_filepath,
+    train_image_dir,
+    test_image_dir,
+    train_labels_csv,
+    test_labels_csv,
+    callbacks,
+    model_start_time,
+    verbose=True,
+    epochs=1000,
+):
+    img = Image.open(f'{train_image_dir}/0.png')
+    img_width, img_height = img.size
+
+    # Load the labels from the CSV files
+    if verbose: print('Loading the labels from the CSV files ...')
+    training_labels = pd.read_csv(train_labels_csv)['label'].values
+    testing_labels = pd.read_csv(test_labels_csv)['label'].values
+    
+    # Create tf.data.Dataset for the training and testing images
+    if verbose: print('Creating the training and testing datasets ...')
+    train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(train_image_dir), img_width, img_height, batch_size=32)
+    test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(test_image_dir), img_width, img_height, batch_size=32)
+
+    
+    # Fit the model using the datasets
+    model.fit(
+        train_dataset,
+        epochs=epochs,
+        validation_data=test_dataset,
+        callbacks=callbacks,
+        verbose=verbose
+    )
+
+    # evaluate the model
+    if verbose:
+        print("\nModel fit, evaluating accuracy and saving locally now ... \n")
+    loss, accuracy = model.evaluate(test_dataset)
     print(f"Loss: {loss}")
     print(f"Accuracy: {accuracy}")
 
     # save it locally for future reuse
-    model.save(f"{model_name}.keras")
+    model.save(f"{model_filepath}model.keras")
 
     if verbose:
         print(
-            f"\nModel evaluated & saved locally at '{model_name}.model' on {get_current_time()} after {get_elapsed_time(model_start_time)}!\n"
+            f"\nModel evaluated & saved locally at '{model_filepath}.keras' on {get_current_time()} after {get_elapsed_time(model_start_time)}!\n"
         )
 
     return model
 
 
-def test_model(model, testing_images, testing_labels, random=False):
-
-    for i in range(len(testing_images)):
-        img = testing_images[i]
-        label = testing_labels[i]
-        img = np.array([img])
-        result = model.predict(img)
-        prediction = np.argmax(result)
-        confidence = result[0][prediction]
-
-        if prediction == label:
-            print(
-                f"Prediction: {prediction} | Actual: {label} | Confidence: {np.round(confidence*100,4)}"
-            )
-        else:
-            print(
-                f"Prediction: {prediction} | Actual: {label} | Confidence: {np.round(confidence*100,4)} --- UDUMMY!"
-            )
-
-    #
-    if random:
-
-        with open(".data/deckdrafterprod.MTGCard_small(-1).json", "r") as f:
-            data = json.load(f)
-
-        for i in range(10):
-
-            # randomly select an image from data
-            index = np.random.randint(0, len(data))
-            img_url = data[index]["image"]
-
-            # Download and open the image
-            response = requests.get(img_url)
-            try:
-                img = Image.open(BytesIO(response.content))
-            except UnidentifiedImageError:
-                print(f"Cannot identify image file from URL: {img_url}")
-                continue
-
-            img = np.array([img])
-            result = model.predict(img)
-            prediction = np.argmax(result)
-            confidence = result[0][prediction]
 
 
 # =======================================================
 
 
-class AccuracyThresholdCallback(callbacks.Callback):
-    def __init__(self, threshold):
-        super(AccuracyThresholdCallback, self).__init__()
-        self.threshold = threshold
-
-    def on_epoch_end(self, epoch, logs=None):
-        val_accuracy = logs.get("val_accuracy")
-        if val_accuracy >= self.threshold:
-            self.model.stop_training = True
-
 
 # =======================================================
+if __name__ == "__main__":
+    # ACTION:
+        # 0 : you want to make a new model from scratch
+            # downloads the images
+            # processes the json
+            # augments the images
+
+        # 1 : you already have a folder with a model and you want to KEEP ON TRAINING IT
+            # references the alredy compiled training and testing data
+            # loads a checkpoint model
+            # continues to fit the model
+
+        # 2 : purely testing a pre-exsisting model
+            # references the already compiled testing data
+            # loads a checkpoint (or the end model)
+            # tests the model 
+
+    action = 0
 
 
-# here, you would format the raw json data that Trent has, and then make a formatted json file
-raw_json_filepath = './.data/deckdrafterprod.MTGCard.json'
-formatted_json_filepath = format_json(raw_json_filepath, -1)
-# formatted_json_filepath = ".data/deckdrafterprod.MTGCard_small(-1).json"
-
-train_imgs, test_imgs, train_lbs, test_lbs = get_datasets(formatted_json_filepath)
-# model_name = "harmony_1.1.0"
-# unique_printings = get_json_length(formatted_json_filepath)
-
-# Create a callback that stops training when accuracy reaches 98%
-# accuracy_threshold_callback = AccuracyThresholdCallback(threshold=0.95)
-
-# =======================================================
+    
 
 
-# model = train_CNN_model(
-#     model_name,
-#     train_imgs,
-#     test_imgs,
-#     train_lbs,
-#     test_lbs,
-#     unique_printings,
-#     callbacks=[accuracy_threshold_callback],
-# )
+
+    data = './.data/'
+    model_name = 'harmony_0.0.8'
+    # NOTE: this count tries to grab x number of cards (or unique classes)
+    # however, there could be some image url's that are invalid (in which case this image is skipped)
+    # and there could be card faces to one unique class (in which case there is another card with the same id added)
+    inital_json_grab = 500   # -1 to get all of the objects in the json
+    model_filepath = f'{data}{model_name}/'
+
+    # =======================================
+    # CALLBACKS
+
+    accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.95)
+
+    checkpoint_filepath = f'{model_filepath}model_checkpoint.keras'
+    checkpoint_callback = callbacks.ModelCheckpoint(
+        filepath=checkpoint_filepath,
+        save_weights_only=False,
+        save_best_only=False
+    )
+
+    csv_logger_callback = CsvLoggerCallback(f'{model_filepath}csv_logs.csv')
+
+    # =======================================
+
+        # print some preliminary information here
+        # so that the log can log it lol
+
+    if action == 0:
+        # make new model FROM SCRATCH
+        print('MAKING NEW MODEL FROM SCRATCH')
+
+        raw_json_filepath = f'{data}/deckdrafterprod.MTGCard.json'
+        formatted_json_filepath = format_json(raw_json_filepath, inital_json_grab, 'small')
+        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
+        # train_image_dir, train_labels_csv = get_train_only_dataset(formatted_json_filepath, model_filepath)
 
 
-model = models.load_model("harmony_1.1.0.keras")
-# model.fit(train_imgs, train_lbs, epochs=epochs)
+        
+        model = train_new_CNN_model(
+            model_filepath,
+            train_image_dir,
+            test_image_dir,
+            train_labels_csv,
+            test_labels_csv,
+            unique_classes,
+            [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
+            verbose=True,
+            epochs=10000000000000,
+        )
+
+    elif action == 1:
+        # KEEP TRAINING EXSISTING MODEL
+        print('CONTINUING TRAINING ON EXSISTING MODEL')
+
+        formatted_json_filepath = f'{data}/deckdrafterprod.MTGCard_small({inital_json_grab}).json'
+        train_image_dir = f'{model_filepath}train_images'
+        test_image_dir = f'{model_filepath}test_images'
+        train_labels_csv = f'{model_filepath}train_labels.csv'
+        test_labels_csv = f'{model_filepath}test_labels.csv'
+
+        # unique_printings = pd.read_csv(train_labels_csv)['label'].nunique()
+        # print(f'Unique Classes: {unique_printings}')
+
+        loaded_model = models.load_model(checkpoint_filepath)
+        model = fit_model(
+            loaded_model,
+            model_filepath,
+            train_image_dir,
+            test_image_dir,
+            train_labels_csv,
+            test_labels_csv,
+            model_start_time=time.time()
+            [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
+            verbose=True,
+            epochs=10000000000000,
+        )
+    
+    elif action == 2:
+        # Add code for testing a pre-existing model
+        pass
+    else:
+        print("Invalid action value. Please choose a valid action.")
 
 
-# Model is tested above
-test_model(model, test_imgs, test_lbs, True)
+
+
+# ===========================================================================================================
+
+
+
+
+
+

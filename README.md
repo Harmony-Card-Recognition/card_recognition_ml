@@ -2,10 +2,10 @@
 Identifies cards based on an image. 
 
 
-# to activate the venv
+# activate the venv
     .venv\Scripts\activate
     source venv/Scripts/activate
-# do deactivate the venv
+# deactivate the venv
 deactivate
 
 

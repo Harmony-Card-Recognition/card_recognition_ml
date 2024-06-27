@@ -7,9 +7,7 @@ import json
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 
-from image_processing import random_edit_img
-
-
+from helper.image_processing import random_edit_img
 
 
 def get_datasets(json_filepath, model_filepath, verbose=True):
@@ -124,10 +122,14 @@ def get_json_length(filepath):
     return len(data)
 
 
-def create_smaller_json(filepath, image_size=-1, verbose=True):
+def create_smaller_json(filepath, model_filepath, image_size=-1, verbose=True):
     if verbose: print(f"Copying {image_size} Objects ...\n")
+
     # Create a new file path for the smaller JSON file
-    new_filepath = filepath.replace(".json", f"_small({image_size}).json")
+    d, f = filepath.rsplit('/', 1)
+    f = f.replace(".json", f"_small({image_size}).json")
+
+    new_filepath = os.path.join(model_filepath, f)
 
     # Load the entire JSON file
     with open(filepath, "r", encoding="utf-8") as original_file:
@@ -239,10 +241,10 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
 # ==================================================
 
 
-def format_json(raw_json_filepath, small_json_size, image_size="normal", verbose=True):
+def format_json(raw_json_filepath, small_json_size, model_filepath, image_size="normal", verbose=True):
     # create a smaller dataset (ideally with all of the images)
     if verbose: print('\n--- CREATING SEPERATE JSON ---')
-    new_filepath = create_smaller_json(raw_json_filepath, small_json_size)
+    new_filepath = create_smaller_json(raw_json_filepath, model_filepath, small_json_size)
 
     # for each object in the json file, remove the everything but the '_id', 'image_uris', 'card_faces' attributes
     if verbose: print('\n--- FILTERINg JSON ---')

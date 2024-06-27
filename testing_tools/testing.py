@@ -1,11 +1,14 @@
+import os, sys
+PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(PROJ_PATH)
+
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-import os
 
 from PIL import Image   
 
-from image_processing import load_image
+from helper.image_processing import load_image
    
 
 def test_model_via_csv(csv_path, image_folder, model, img_width, img_height):
@@ -47,7 +50,7 @@ def test_model_via_index(img_path, card_index, model, img_width, img_height, thr
             print(f'For card {os.path.basename(img_path)}, model predicted index {result_index} with {np.round(confidence*100,4)}% confidence. (INCORRECT)')
 
 if __name__ == "__main__":
-    model_folder = './.data/harmony_0.0.7'
+    model_folder = os.path.join(PROJ_PATH, '.data/harmony_0.0.7')
     model_path = os.path.join(model_folder, 'model.keras')
     image_folder = os.path.join(model_folder, 'test_images')
     labels_csv = os.path.join(model_folder, 'test_labels.csv')

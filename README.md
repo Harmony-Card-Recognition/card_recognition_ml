@@ -3,8 +3,11 @@ Identifies cards based on an image.
 
 
 # activate the venv
+    # windows
     .venv\Scripts\activate
-    source venv/Scripts/activate
+    
+    # unix
+    source .venv/Scripts/activate
 # deactivate the venv
 deactivate
 
@@ -30,7 +33,8 @@ NOTE: you must do this before installing or running anything
 
 0.3) install the nessicary packages
 NOTE: you can skip this after installing them once
-'pip install scikit-learn opencv-python keras numpy pandas Pillow requests tensorflow matplotlib tensorflow_probability tensorflow-probability[tf]'
+'pip install scikit-learn opencv-python keras numpy pandas Pillow requests tensorflow matplotlib tensorflow_probability tensorflow-probability[tf]
+'
 
 0.4) deactivate the .venv
 NOTE: you must have first activated the .venv

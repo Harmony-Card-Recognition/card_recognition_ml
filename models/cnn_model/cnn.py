@@ -1,34 +1,23 @@
-import os
+import os, sys
+PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(PROJ_PATH)
+
+
 import time as time
 import pandas as pd
 import tensorflow as tf
 
 from PIL import Image
 from keras import callbacks, layers, models, optimizers
-from callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback
+from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback
 
-from image_processing import load_image
-from helper import get_current_time, get_elapsed_time
-from json_processing import format_json, get_datasets
-
-
+from helper.image_processing import load_image
+from helper.helper import get_current_time, get_elapsed_time
+from helper.json_processing import format_json, get_datasets
 
 
 
-def bad_create_dataset(image_dir, labels, img_width, img_height, batch_size):
-    # Get the list of filenames and sort it
-    filenames = sorted(os.listdir(image_dir))
-    
-    # Join the filenames with the directory path
-    image_paths = [os.path.join(image_dir, f) for f in filenames]
-    
-    image_paths = tf.convert_to_tensor(image_paths)
-    labels = tf.convert_to_tensor(labels)
 
-    dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
-    dataset = dataset.map(lambda image, label: (load_image(image, img_width, img_height), label))
-    dataset = dataset.batch(batch_size)
-    return dataset
 
 def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     # Load the CSV file
@@ -49,7 +38,6 @@ def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     dataset = dataset.batch(batch_size)
     return dataset
 
-
 def train_new_CNN_model(
     model_filepath,
     train_image_dir,
@@ -64,56 +52,36 @@ def train_new_CNN_model(
     """Help: Create and train a CNN model for the provided model_data"""
     model_start_time = time.time()
 
-
     img = Image.open(f'{train_image_dir}/0.png')
     img_width, img_height = img.size
 
-
-
     # Define the model
     if verbose: print('Defining the model ...')
-    # works up to 90...
-    # model = models.Sequential()
-    # model.add(layers.Conv2D(32, (3, 3), activation="relu", input_shape=(img_width, img_height, 3)))
-    # model.add(layers.MaxPooling2D(2, 2))
-    # model.add(layers.Conv2D(64, (3, 3), activation="relu"))
-    # model.add(layers.MaxPooling2D(2, 2))
-    # model.add(layers.Conv2D(128, (3, 3), activation="relu"))
-    # model.add(layers.MaxPooling2D(2, 2))
-    # model.add(layers.Conv2D(128, (3, 3), activation="relu"))
-    # model.add(layers.MaxPooling2D(2, 2))
-    # model.add(layers.Conv2D(256, (3, 3), activation="relu"))
-    # model.add(layers.MaxPooling2D(2, 2))
-    # model.add(layers.Flatten())
-    # model.add(layers.Dense(1024, activation="relu"))
-    # model.add(layers.Dropout(0.5))
-    # model.add(layers.Dense(unique_printings, activation="softmax"))
-
-    # leaky ReLU
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), input_shape=(img_width, img_height, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
+    model.add(layers.Input(shape=(img_width, img_height, 3)))
     model.add(layers.Conv2D(64, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(128, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Conv2D(128, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(256, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Conv2D(256, (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Conv2D(512, (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Flatten())
-    model.add(layers.Dense(1024))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.Dense(2048))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(unique_printings, activation="softmax"))
 
@@ -137,8 +105,6 @@ def train_new_CNN_model(
         verbose=verbose,
         epochs=epochs,
     )
-
-
 
 def fit_model(
     model,
@@ -164,7 +130,6 @@ def fit_model(
     if verbose: print('Creating the training and testing datasets ...')
     train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(train_image_dir), img_width, img_height, batch_size=32)
     test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(test_image_dir), img_width, img_height, batch_size=32)
-
     
     # Fit the model using the datasets
     model.fit(
@@ -192,13 +157,6 @@ def fit_model(
 
     return model
 
-
-
-
-# =======================================================
-
-
-
 # =======================================================
 if __name__ == "__main__":
     # ACTION:
@@ -220,17 +178,14 @@ if __name__ == "__main__":
     action = 0
 
 
-    
-
-
-
-    data = './.data/'
-    model_name = 'harmony_0.0.8'
+    data = os.path.join(PROJ_PATH, '.data/cnn')
+    model_name = 'harmony_cnn_0.0.4'
     # NOTE: this count tries to grab x number of cards (or unique classes)
     # however, there could be some image url's that are invalid (in which case this image is skipped)
     # and there could be card faces to one unique class (in which case there is another card with the same id added)
-    inital_json_grab = 500   # -1 to get all of the objects in the json
-    model_filepath = f'{data}{model_name}/'
+    inital_json_grab = 3   # -1 to get all of the objects in the json
+    model_filepath = os.path.join(data, model_name)
+    os.mkdir(model_filepath)
 
     # =======================================
     # CALLBACKS
@@ -254,9 +209,9 @@ if __name__ == "__main__":
     if action == 0:
         # make new model FROM SCRATCH
         print('MAKING NEW MODEL FROM SCRATCH')
-
-        raw_json_filepath = f'{data}/deckdrafterprod.MTGCard.json'
-        formatted_json_filepath = format_json(raw_json_filepath, inital_json_grab, 'small')
+        
+        raw_json_filepath = os.path.join(data, '..', 'deckdrafterprod.MTGCard.json')
+        formatted_json_filepath = format_json(raw_json_filepath, inital_json_grab, model_filepath, 'large')
         train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
         # train_image_dir, train_labels_csv = get_train_only_dataset(formatted_json_filepath, model_filepath)
 
@@ -307,13 +262,4 @@ if __name__ == "__main__":
     else:
         print("Invalid action value. Please choose a valid action.")
 
-
-
-
 # ===========================================================================================================
-
-
-
-
-
-

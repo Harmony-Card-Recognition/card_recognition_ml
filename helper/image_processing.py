@@ -116,3 +116,14 @@ def load_image(image_path, img_width, img_height):
     img = img / 255.0
     # img = tf.expand_dims(img, axis=0)
     return img
+
+
+def get_img_dim(size:str):
+    width, height = 0, 0
+    if size == 'small':
+        width, height = 146, 204
+    elif size == 'normal':
+        width, height = 488, 680
+    elif size == 'large':
+        width, height = 672, 936
+    return width, height

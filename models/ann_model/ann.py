@@ -10,16 +10,13 @@ from concurrent.futures import ProcessPoolExecutor
 from helper.image_processing import load_image
 from helper.json_processing import format_json, get_datasets
 
-def load_and_process_image(image_path, img_width, img_height):
-    return np.array(load_image(image_path, img_width, img_height)).flatten()
-
 def preprocess_images_for_ann_parallel(csv_file, image_dir, img_width, img_height):
     df = pd.read_csv(csv_file)
     paths = [os.path.join(image_dir, f) for f in df['filename'].tolist()]
     labels = df['label'].tolist()
 
     with ProcessPoolExecutor() as executor:
-        images = list(executor.map(load_and_process_image, paths, [img_width]*len(paths), [img_height]*len(paths)))
+        images = list(executor.map(lambda path, w, h: np.array(load_image(path, w, h)).flatten(), paths, [img_width]*len(paths), [img_height]*len(paths)))
 
     return np.array(images), labels
 

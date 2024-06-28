@@ -10,7 +10,7 @@ from io import BytesIO
 from helper.image_processing import random_edit_img
 
 
-def get_datasets(json_filepath, model_filepath, verbose=True):
+def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
     """returns the train_images, test_images, train_labels, test_labels in that order"""
     # Load the JSON file into a DataFrame
     df = pd.read_json(json_filepath)
@@ -110,60 +110,53 @@ def get_datasets(json_filepath, model_filepath, verbose=True):
         # The function now returns the paths to the image directories and the labels CSV files
     return train_image_dir, test_image_dir, os.path.join(model_filepath, 'train_labels.csv'), os.path.join(model_filepath, 'test_labels.csv'), unique_index+1
 
-
-
 # ==================================================
 # HELPERS
 
+# def get_json_length(filepath):
+#     with open(filepath, "r") as f:
+#         data = json.load(f)
+#     return len(data)
 
-def get_json_length(filepath):
-    with open(filepath, "r") as f:
-        data = json.load(f)
-    return len(data)
 
+def create_smaller_json(json_filepath:str, new_filepath:str, image_count:int, verbose:bool=True):
+    if verbose: print(f"Copying {image_count} Objects ...\n")
 
-def create_smaller_json(filepath, model_filepath, image_size=-1, verbose=True):
-    if verbose: print(f"Copying {image_size} Objects ...\n")
+    # # Create a new file path for the smaller JSON file
+    # d, f = json_filepath.rsplit('/', 1)
+    # f = f.replace(".json", f"_small({image_count}).json")
 
-    # Create a new file path for the smaller JSON file
-    d, f = filepath.rsplit('/', 1)
-    f = f.replace(".json", f"_small({image_size}).json")
-
-    new_filepath = os.path.join(model_filepath, f)
+    # new_filepath = os.path.join(model_filepath, f)
 
     # Load the entire JSON file
-    with open(filepath, "r", encoding="utf-8") as original_file:
+    with open(json_filepath, "r", encoding="utf-8") as original_file:
         data = json.load(original_file)
 
     # get the specified # of data from the dataset
-    if image_size == -1:
+    if image_count == -1:
         if verbose: print(
-            f'Copying ALL objects from "{filepath}" to "{new_filepath}" ...'
+            f'Copying ALL objects from "{json_filepath}" to "{new_filepath}" ...'
         )
         small_data = data
     else:
         if verbose: print(
-            f'Copying {image_size} objects from "{filepath}" to "{new_filepath}" ...'
+            f'Copying {image_count} objects from "{json_filepath}" to "{new_filepath}" ...'
         )
-        small_data = data[:image_size]
+        small_data = data[:image_count]
 
     # Write the small data to the new JSON file
     with open(new_filepath, "w", encoding="utf-8") as new_file:
         json.dump(small_data, new_file, indent=4)
 
     # Copy the original file's permissions to the new file
-    shutil.copymode(filepath, new_filepath)
+    shutil.copymode(json_filepath, new_filepath)
 
     if verbose: print("\nFinished Copying!")
 
-    # Return the path of the new JSON file
-    return new_filepath
-
-
-def filter_attributes_json(filepath, attributes=["_id", "image_uris", "card_faces"], verbose=True):
-    if verbose: print(f"Filtering {filepath} with only {attributes} ...")
+def filter_attributes_json(json_filepath:str, attributes:list[str]=["_id", "image_uris", "card_faces"], verbose:bool=True):
+    if verbose: print(f"Filtering {json_filepath} with only {attributes} ...")
     # Open the original JSON file and load the data
-    with open(filepath, "r", encoding="utf-8") as original_file:
+    with open(json_filepath, "r", encoding="utf-8") as original_file:
         data = json.load(original_file)
 
     # Filter the objects to only include the specified attributes
@@ -172,18 +165,17 @@ def filter_attributes_json(filepath, attributes=["_id", "image_uris", "card_face
     ]
 
     # Write the filtered data back to the original JSON file
-    with open(filepath, "w", encoding="utf-8") as original_file:
+    with open(json_filepath, "w", encoding="utf-8") as original_file:
         json.dump(filtered_data, original_file, indent=4)
 
     if verbose: print("Finished filtering!")
 
-
-def format_image_attributes(filepath, image_size="normal", verbose=True):
+def format_image_attributes(json_filepath:str, image_size:str, verbose:bool=True):
     # unique_ids = 0
-    if verbose: print(f'Formatting {filepath} with {image_size} image size')
+    if verbose: print(f'Formatting {json_filepath} with {image_size} image size')
 
     # Load the JSON file
-    with open(filepath, "r") as f:
+    with open(json_filepath, "r") as f:
         data = json.load(f)
 
     # new json object for duplicate card faces
@@ -233,7 +225,7 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
 
 
     # Write the modified data back to the JSON file
-    with open(filepath, "w") as f:
+    with open(json_filepath, "w") as f:
         json.dump(new_data, f, indent=4)
 
     if verbose: print('Finished formatting!')
@@ -241,19 +233,17 @@ def format_image_attributes(filepath, image_size="normal", verbose=True):
 # ==================================================
 
 
-def format_json(raw_json_filepath, small_json_size, model_filepath, image_size="normal", verbose=True):
+def format_json(raw_json_filepath:str, new_filepath:str, image_count:int, image_size:str, verbose:bool=True):
     # create a smaller dataset (ideally with all of the images)
     if verbose: print('\n--- CREATING SEPERATE JSON ---')
-    new_filepath = create_smaller_json(raw_json_filepath, model_filepath, small_json_size)
+    create_smaller_json(json_filepath=raw_json_filepath, new_filepath=new_filepath, image_count=image_count)
 
     # for each object in the json file, remove the everything but the '_id', 'image_uris', 'card_faces' attributes
-    if verbose: print('\n--- FILTERINg JSON ---')
-    filter_attributes_json(new_filepath)
+    if verbose: print('\n--- FILTERING JSON ---')
+    filter_attributes_json(json_filepath=new_filepath)
 
     # convert the 'image_uris' and 'card_faces' to a universal 'image'
     if verbose: print('\n--- FORMATTING JSON ATTRIBUTES ---')
-    format_image_attributes(new_filepath, image_size)
+    format_image_attributes(json_filepath=new_filepath, image_size=image_size)
 
     if verbose: print('\n--- JSON FULLY FORMATTED ---')
-
-    return new_filepath

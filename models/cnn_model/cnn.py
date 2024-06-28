@@ -169,22 +169,31 @@ if __name__ == '__main__':
             # loads a checkpoint model
             # continues to fit the model
 
-        # 2 : purely testing a pre-exsisting model
-            # references the already compiled testing data
-            # loads a checkpoint (or the end model)
-            # tests the model 
-
     action = 0
-
-
-    data = os.path.join(PROJ_PATH, '.data/cnn')
     model_name = 'harmony_cnn_0.0.8'
     image_size = 'small'
     inital_json_grab = 3   # -1 to get all of the objects in the json
 
+    if len(sys.argv) == 1:
+        print('\nrunning with DEFAULT args\n')
+    elif len(sys.argv) == 5:
+        print('\nrunning with CUSTOM args\n')
+        action = int(sys.argv[1])
+        model_name = 'harmony_cnn_' + str(sys.argv[2])
+        image_size = str(sys.argv[3])
+        inital_json_grab = int(sys.argv[4])
+    else:
+        print('\n\nPLEASE CHECK ARGUMENTS')
+        print('python(3) cnn.py [action] [model] [size] [count]')
+        print('python(3) cnn.py 0 0.0.8 small 3')
+        sys.exit()
+        
 
+
+    
+    data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
-    os.mkdir(model_filepath)
+    os.makedirs(model_filepath)
 
     # =======================================
     # CALLBACKS
@@ -210,15 +219,10 @@ if __name__ == '__main__':
         print('MAKING NEW MODEL FROM SCRATCH')
         
         raw_json_filepath = os.path.join(data, '..', 'deckdrafterprod.MTGCard.json')
-
-        # Create a new file path for the smaller JSON file
-        d, f = raw_json_filepath.rsplit('/', 1)
-        f = f.replace('.json', f'_small({inital_json_grab}).json')
-        formatted_json_filepath = os.path.join(model_filepath, f)
+        formatted_json_filepath = os.path.join(model_filepath, f'deckdrafterprod.MTGCard_small({inital_json_grab}).json')
 
         format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
         train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
-
 
         
         model = train_new_CNN_model(
@@ -261,10 +265,6 @@ if __name__ == '__main__':
         #     
         # epochs=10000000000000,
         # )
-        pass
-        
-    elif action == 2:
-        # Add code for testing a pre-existing model
         pass
     else:
         print('Invalid action value. Please choose a valid action.')

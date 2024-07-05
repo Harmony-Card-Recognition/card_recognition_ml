@@ -3,11 +3,13 @@ import shutil
 import pandas as pd
 import requests
 import json
+import hashlib
 
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 
 from helper.image_processing import random_edit_img
+from sklearn.preprocessing import LabelEncoder
 
 
 def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
@@ -229,6 +231,22 @@ def format_image_attributes(json_filepath:str, image_size:str, verbose:bool=True
         json.dump(new_data, f, indent=4)
 
     if verbose: print('Finished formatting!')
+
+def encode_alphanumeric_to_int(json_filepath:str):
+    # Load the JSON file
+    with open(json_filepath, "r") as f:
+        data = json.load(f)
+    
+    # Assign the index of each object in the JSON file as the 'encoded' attribute
+    for index, json_object in enumerate(data):
+        if "_id" in json_object:
+            # Use the index as the 'encoded' value
+            json_object["encoded"] = str(index)
+    
+    # Write the modified data back to the JSON file
+    with open(json_filepath, "w") as f:
+        json.dump(data, f, indent=4)
+
 
 # ==================================================
 

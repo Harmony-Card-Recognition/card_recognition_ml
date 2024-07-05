@@ -1,8 +1,11 @@
 import random
 import numpy as np
-from PIL import Image, ImageFilter, ImageEnhance
 import tensorflow as tf
+import requests
 
+from typing import Tuple
+from PIL import Image, ImageFilter, ImageEnhance
+from io import BytesIO
 
 def zoom_rotate_img(image):
     """Help: Randomly rotate and zoom the given PIL image degrees and return it"""
@@ -70,7 +73,7 @@ def adjust_sharpness(image):
 # =====================================================
 
 
-def random_edit_img(image, distort=True, verbose=False):
+def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = False) -> Image.Image:
     """Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
     the image if need be."""
 
@@ -109,21 +112,32 @@ def random_edit_img(image, distort=True, verbose=False):
 
 
 
-def load_image(image_path, img_width, img_height):
+
+
+def get_tensor_from_dir(image_path: str, img_width: int, img_height: int) -> tf.Tensor:
     img = tf.io.read_file(image_path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = tf.image.resize(img, [img_width, img_height])
     img = img / 255.0
-    # img = tf.expand_dims(img, axis=0)
     return img
 
+def get_tensor_from_image(image: Image.Image, img_width: int, img_height: int) -> tf.Tensor:
+    image_array = np.array(image)
+    img = tf.convert_to_tensor(image_array, dtype=tf.float32)
+    img = tf.image.resize(img, [img_width, img_height])
+    img = img / 255.0
+    return img
 
-def get_img_dim(size:str):
+def get_image_from_uri(image_uri: str) -> Image.Image:
+    response = requests.get(image_uri)
+    image_data = response.content
+    image = Image.open(BytesIO(image_data))
+    return image
+
+def get_img_dim(size: str) -> Tuple[int, int]:
     width, height = 0, 0
     if size == 'small':
         width, height = 146, 204
     elif size == 'normal':
         width, height = 488, 680
-    elif size == 'large':
-        width, height = 672, 936
     return width, height

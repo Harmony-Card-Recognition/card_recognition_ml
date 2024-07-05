@@ -11,7 +11,7 @@ from PIL import Image
 from keras import callbacks, layers, models, optimizers
 from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback
 
-from helper.image_processing import load_image, get_img_dim
+from helper.image_processing import get_tensor_from_dir, get_img_dim
 from helper.helper import get_current_time, get_elapsed_time
 from helper.json_processing import format_json, get_datasets
 
@@ -34,7 +34,7 @@ def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     labels = tf.convert_to_tensor(labels)
 
     dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
-    dataset = dataset.map(lambda image, label: (load_image(image, img_width, img_height), label))
+    dataset = dataset.map(lambda image, label: (get_tensor_from_dir(image, img_width, img_height), label))
     dataset = dataset.batch(batch_size)
     return dataset
 
@@ -170,9 +170,9 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_0.0.8'
+    model_name = 'harmony_cnn_0.0.0'
     image_size = 'small'
-    inital_json_grab = 3   # -1 to get all of the objects in the json
+    inital_json_grab = 10   # -1 to get all of the objects in the json
 
     if len(sys.argv) == 1:
         print('\nrunning with DEFAULT args\n')
@@ -184,13 +184,11 @@ if __name__ == '__main__':
         inital_json_grab = int(sys.argv[4])
     else:
         print('\n\nPLEASE CHECK ARGUMENTS')
-        print('python(3) cnn.py [action] [model] [size] [count]')
-        print('python(3) cnn.py 0 0.0.8 small 3')
+        print('python(3) path_to_cnn/cnn.py [action] [model] [size] [count]')
+        print('python(3) path_to_cnn/cnn.py 0 0.0.8 small 3')
         sys.exit()
         
-
-
-    
+    hello = 'hello'
     data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
     os.makedirs(model_filepath)

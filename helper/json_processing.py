@@ -7,6 +7,7 @@ import hashlib
 
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
+from copy import deepcopy
 
 from helper.image_processing import random_edit_img
 from sklearn.preprocessing import LabelEncoder
@@ -155,16 +156,32 @@ def create_smaller_json(json_filepath:str, new_filepath:str, image_count:int, ve
 
     if verbose: print("\nFinished Copying!")
 
-def filter_attributes_json(json_filepath:str, attributes:list[str]=["_id", "image_uris", "card_faces"], verbose:bool=True):
+def filter_attributes_json(json_filepath:str, attributes:list[str], verbose:bool=True):
     if verbose: print(f"Filtering {json_filepath} with only {attributes} ...")
     # Open the original JSON file and load the data
     with open(json_filepath, "r", encoding="utf-8") as original_file:
         data = json.load(original_file)
+    
 
     # Filter the objects to only include the specified attributes
-    filtered_data = [
-        {attr: obj[attr] for attr in attributes if attr in obj} for obj in data
-    ]
+    filtered_data = []
+
+    for obj in data:
+        new_obj = {}
+        for attr in attributes:
+            if attr in obj:
+                new_obj[attr] = obj[attr]
+
+        if 'card_faces' in obj:
+            for face in obj['card_faces']:
+                face_obj = deepcopy(new_obj)
+                for attr in attributes:
+                    if attr in face:
+                        face_obj[attr] = face[attr]
+                filtered_data.append(face_obj)
+            continue 
+        filtered_data.append(new_obj)
+
 
     # Write the filtered data back to the original JSON file
     with open(json_filepath, "w", encoding="utf-8") as original_file:
@@ -172,65 +189,35 @@ def filter_attributes_json(json_filepath:str, attributes:list[str]=["_id", "imag
 
     if verbose: print("Finished filtering!")
 
-def format_image_attributes(json_filepath:str, image_size:str, verbose:bool=True):
-    # unique_ids = 0
+def format_image_attributes(json_filepath:str, image_size:str, image_attribute_label:str = 'image_uris', verbose:bool=True):
     if verbose: print(f'Formatting {json_filepath} with {image_size} image size')
 
     # Load the JSON file
     with open(json_filepath, "r") as f:
         data = json.load(f)
 
-    # new json object for duplicate card faces
-    # list of dictionaries with two values ('_id' and image url)
-    new_data = []
+    filtered_data = []
 
     # Add the attribute to each dictionary
     for json_object in data:
-        if ("image_uris" in json_object): # use the first images that we see (these would probably be the best)
-            new_face = {}
-            new_face['_id'] = json_object["_id"] 
-            new_face['image'] = json_object["image_uris"][image_size]
-            new_data.append(new_face)
-            # unique_ids += 1
-
-        elif "card_faces" in json_object:
-            # for each image that there is in the 'card_faces', create a new json object
-            new_face_objects = []
-            for face in json_object["card_faces"]:
-                if "image_uris" in face:
-                    # the face that we are currently on (or else this iteration will result in an object
-                    # without an image)
-                    
-                    if new_face_objects.count == 0:
-                        json_object['image'] = face["image_uris"][image_size]
-                    else:
-                        new_face = {}
-                        new_face['_id'] = json_object["_id"] 
-                        new_face['image'] = face["image_uris"][image_size]
-
-                        new_face_objects.append(new_face)
-            
-            if new_face_objects.count != 0:
-                new_data.extend(new_face_objects)
-                item_id = json_object["_id"]
-                if verbose: print(f'({item_id}) DUPLICATE card faces added ...')
-                
-
-            else:
-                if verbose: print(f'NO IMAGES FOUND IN CARDFACES [skipped] ...')
-
+        if image_attribute_label in json_object: # use the first images that we see (these would probably be the best)
+            json_object['image'] = json_object[image_attribute_label][image_size]
+            # delete the attribute that the json object has of the old image data
+            json_object
+            filtered_data.append(json_object)
+ 
         else:
             # if there is no image found for the object, just skip it for now, and print a message
-            item_id = json_object["_id"]
-            if verbose: print(f"({item_id}) NO IMAGES FOUND [skipped] ...")
-            
-
+            if verbose: print(f"({json_object['_id']}) NO IMAGES FOUND [removed from json] ...")
 
     # Write the modified data back to the JSON file
     with open(json_filepath, "w") as f:
-        json.dump(new_data, f, indent=4)
+        json.dump(filtered_data, f, indent=4)
 
     if verbose: print('Finished formatting!')
+
+
+
 
 def encode_alphanumeric_to_int(json_filepath:str):
     # Load the JSON file
@@ -247,21 +234,17 @@ def encode_alphanumeric_to_int(json_filepath:str):
     with open(json_filepath, "w") as f:
         json.dump(data, f, indent=4)
 
-
 # ==================================================
 
 
-def format_json(raw_json_filepath:str, new_filepath:str, image_count:int, image_size:str, verbose:bool=True):
-    # create a smaller dataset (ideally with all of the images)
+def format_json(raw_json_filepath:str, new_filepath:str, image_count:int, image_size:str, attributes:list[str] = ['_id', 'images'], verbose:bool=True):
     if verbose: print('\n--- CREATING SEPERATE JSON ---')
     create_smaller_json(json_filepath=raw_json_filepath, new_filepath=new_filepath, image_count=image_count)
 
-    # for each object in the json file, remove the everything but the '_id', 'image_uris', 'card_faces' attributes
     if verbose: print('\n--- FILTERING JSON ---')
-    filter_attributes_json(json_filepath=new_filepath)
+    filter_attributes_json(json_filepath=new_filepath, attributes=attributes)
 
-    # convert the 'image_uris' and 'card_faces' to a universal 'image'
     if verbose: print('\n--- FORMATTING JSON ATTRIBUTES ---')
-    format_image_attributes(json_filepath=new_filepath, image_size=image_size)
+    format_image_attributes(json_filepath=new_filepath, image_size=image_size, image_attribute_label='images')
 
-    if verbose: print('\n--- JSON FULLY FORMATTED ---')
+    if verbose: print('\n--- JSON FULLY FORMATTED ---\n')

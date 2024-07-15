@@ -1,21 +1,34 @@
-import os
-import tensorflow as tf
+import json
+import requests
+from pathlib import Path
 
-from PIL import Image   
 
-from testing import test_model_via_index
+def download_image(image_url, save_path):
+    try:
+        response = requests.get(image_url)
+        response.raise_for_status()  # Raises an HTTPError if the response status code is 4XX/5XX
+        with open(save_path, 'wb') as f:
+            f.write(response.content)
+    except requests.exceptions.HTTPError as err:
+        print(f"Failed to download image. HTTP Error: {err}")
+
+
 
 if __name__ == "__main__":
-    model_folder = './.data/harmony_0.0.1'
-    model_path = os.path.join(model_folder, 'model.keras')
-    image_folder = os.path.join(model_folder, 'test_images')
-    labels_csv = os.path.join(model_folder, 'test_labels.csv')
-
-    image_path = os.path.join('./.data/harmony_0.0.7/test_images', '400.png')
-    img = Image.open(image_path)
-    img_width, img_height = img.size
-
-    model = tf.keras.models.load_model(model_path)
-    test_model_via_index(image_path, 0, model, img_width, img_height)
-
-
+    json_file_path = '/home/jude/Work/Store Pass/card_recognition_ml/.data/cnn/harmony_cnn_0.0.0/deckdrafterprod.MTGCard_small(1000).json'
+    original_path = '/home/jude/Work/Store Pass/card_recognition_ml/labelImg/.data/original/'
+    
+    # Ensure the original_path exists
+    Path(original_path).mkdir(parents=True, exist_ok=True)
+    
+    with open(json_file_path, 'r') as file:
+        data = json.load(file)
+    
+    for card in data:
+        image_url = card.get('image_uris')  # Adjust 'image_url' based on your JSON structure
+        if image_url:
+            # Use card ID or name as filename. Adjust 'id' or 'name' based on your JSON structure
+            filename = card.get('_id', 'default_filename') + '.jpg'
+            save_path = Path(original_path) / filename
+            download_image(image_url, save_path)
+            print(f"Downloaded and saved image to {save_path}")

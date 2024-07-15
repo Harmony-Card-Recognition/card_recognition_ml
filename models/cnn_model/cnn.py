@@ -45,7 +45,7 @@ def train_new_CNN_model(
     test_image_dir,
     train_labels_csv,
     test_labels_csv,
-    unique_printings,
+    unique_classes,
     callbacks,
     verbose=True,
     epochs=1000,
@@ -60,37 +60,84 @@ def train_new_CNN_model(
     if verbose: print('Defining the model ...')
     model = models.Sequential()
     model.add(layers.Input(shape=(img_width, img_height, 3)))
-    model.add(layers.Conv2D(64, (3, 3)))
+    model.add(layers.Conv2D(48, (3, 3)))  # Adjusted number of filters
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
-    model.add(layers.Conv2D(128, (3, 3)))
+    model.add(layers.Conv2D(96, (3, 3)))  # Adjusted number of filters
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
-    model.add(layers.Conv2D(256, (3, 3)))
+    # Retained this layer but adjusted filters
+    model.add(layers.Conv2D(192, (3, 3)))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
-    model.add(layers.Conv2D(256, (3, 3)))
+    # Removed one 256 filter layer to balance size and complexity
+    model.add(layers.Conv2D(384, (3, 3)))  # Adjusted number of filters
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
-    model.add(layers.Conv2D(512, (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
+    # Adjusted the dense layer size to balance the model
     model.add(layers.Flatten())
-    model.add(layers.Dense(2048))
+    model.add(layers.Dense(1024))  # Adjusted size
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(unique_printings, activation='softmax'))
+    model.add(layers.Dense(unique_classes, activation='softmax'))
+    # model = models.Sequential()
+    # model.add(layers.Input(shape=(img_width, img_height, 3)))
+    # model.add(layers.Conv2D(64, (3, 3)))
+    # model.add(layers.LeakyReLU(negative_slope=0.01))
+    # model.add(layers.MaxPooling2D(2, 2))
+
+    # model.add(layers.Conv2D(128, (3, 3)))
+    # model.add(layers.LeakyReLU(negative_slope=0.01))
+    # model.add(layers.MaxPooling2D(2, 2))
+
+    # model.add(layers.Conv2D(256, (3, 3)))
+    # model.add(layers.LeakyReLU(negative_slope=0.01))
+    # model.add(layers.MaxPooling2D(2, 2))
+
+    # model.add(layers.Conv2D(256, (3, 3)))
+    # model.add(layers.LeakyReLU(negative_slope=0.01))
+    # model.add(layers.MaxPooling2D(2, 2))
+
+    # model.add(layers.Conv2D(512, (3, 3)))
+    # model.add(layers.LeakyReLU(negative_slope=0.01))
+    # model.add(layers.MaxPooling2D(2, 2))
+
+    # model.add(layers.Flatten())
+    # model.add(layers.Dense(2048))
+    # model.add(layers.LeakyReLU(negative_slope=0.01))
+    # model.add(layers.Dropout(0.5))
+    # model.add(layers.Dense(unique_classes, activation='softmax'))
 
     # Define the optimizer
-    optimizer = optimizers.Adam(learning_rate=0.0001, beta_1=0.9, beta_2=0.999)
+    learning_rate = 0.0001
+    beta_1 = 0.9
+    beta_2 = 0.999
+    optimizer = optimizers.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2)
 
     # Compile the model
-    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    loss = 'sparse_categorical_crossentropy'
+    metrics = ['accuracy']
+    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+
+    # save some specs of the model that is being trained
+    specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
+    with open(specs_filepath, 'w') as f:
+        f.write(f"Model Name: {model_name}\n")
+        f.write(f"Image Size: {image_size}\n")
+        f.write(f"Initial JSON Grab: {inital_json_grab}\n")
+        f.write(f"Unique Classes: {unique_classes}\n")
+        f.write('\n')
+        f.write(f'Learning Rate: {learning_rate}')
+        f.write(f'Beta 1: {beta_1}') 
+        f.write(f'Beta 2: {beta_2}') 
+        f.write(f'Loss: {loss}') 
+        f.write(f'metrics: {metrics}') 
+        f.write('\n')
+
 
     if verbose: print('Network compiled, fitting data now ... \n')
 
@@ -151,6 +198,15 @@ def fit_model(
     # save it locally for future reuse
     model.save(os.path.join(model_filepath, 'model.keras'))
 
+    # save some more model specs
+    specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
+    with open(specs_filepath, 'a') as f:
+        f.write(f"Training Time: {get_elapsed_time(model_start_time)}\n")
+        f.write(f"Loss: {loss}\n")
+        f.write(f"Accuracy: {accuracy}\n")
+        f.write('\n')
+        model.summary(print_fn=lambda x: f.write(x + '\n'))
+
     if verbose:
         print(f'\nModel evaluated & saved locally at {model_filepath}.keras on {get_current_time()} after {get_elapsed_time(model_start_time)}!\n')
 
@@ -170,9 +226,9 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_0.0.0'
-    image_size = 'small'
-    inital_json_grab = 10   # -1 to get all of the objects in the json
+    model_name = 'harmony_cnn_ONEPIECE_0.0.11'
+    image_size = 'large'
+    inital_json_grab = 3   # -1 to get all of the objects in the json
 
     if len(sys.argv) == 1:
         print('\nrunning with DEFAULT args\n')
@@ -188,7 +244,6 @@ if __name__ == '__main__':
         print('python(3) path_to_cnn/cnn.py 0 0.0.8 small 3')
         sys.exit()
         
-    hello = 'hello'
     data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
     os.makedirs(model_filepath)
@@ -209,15 +264,12 @@ if __name__ == '__main__':
 
     # =======================================
 
-        # print some preliminary information here
-        # so that the log can log it lol
-
     if action == 0:
         # make new model FROM SCRATCH
         print('MAKING NEW MODEL FROM SCRATCH')
         
-        raw_json_filepath = os.path.join(data, '..', 'deckdrafterprod.MTGCard.json')
-        formatted_json_filepath = os.path.join(model_filepath, f'deckdrafterprod.MTGCard_small({inital_json_grab}).json')
+        raw_json_filepath = os.path.join(data, '..', 'deckdrafterprod.OnePieceCard.json')
+        formatted_json_filepath = os.path.join(model_filepath, f'deckdrafterprod.OnePieceCard({inital_json_grab}).json')
 
         format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
         train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
@@ -246,8 +298,8 @@ if __name__ == '__main__':
         # train_labels_csv = f'{model_filepath}train_labels.csv'
         # test_labels_csv = f'{model_filepath}test_labels.csv'
 
-        # # unique_printings = pd.read_csv(train_labels_csv)['label'].nunique()
-        # # print(f'Unique Classes: {unique_printings}')
+        # # unique_classes= pd.read_csv(train_labels_csv)['label'].nunique()
+        # # print(f'Unique Classes: {unique_classes}')
 
         # loaded_model = models.load_model(checkpoint_filepath)
         # model = fit_model(

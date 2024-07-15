@@ -134,10 +134,54 @@ def get_image_from_uri(image_uri: str) -> Image.Image:
     image = Image.open(BytesIO(image_data))
     return image
 
-def get_img_dim(size: str) -> Tuple[int, int]:
-    width, height = 0, 0
-    if size == 'small':
+def get_img_dim(image_size: str) -> Tuple[int, int]:
+    if image_size == 'small':
         width, height = 146, 204
-    elif size == 'normal':
+    elif image_size == 'normal':
         width, height = 488, 680
+    elif image_size == 'large':
+        # width, height = 672, 936
+        width, height = 313, 437
     return width, height
+
+# def get_textbox_dim(image_size: str) -> dict[Tuple[int, int]]:
+#     # start is the top left of the rectangle
+#     # end is the bottom right of the rectangle
+#     # ((start), (end))
+#     if image_size == 'small':
+#         edge_left = 7
+#         edge_right = 138
+#         title_top = edge_left
+#         title_bottom = 21
+#         type_line_top = 113
+#         type_line_bottom = 125
+#         oracle_text_top = type_line_bottom
+#         oracle_text_bottom = 184
+
+#     elif image_size == 'normal':
+#         edge_left = 31
+#         edge_right = 463
+#         title_top = edge_left
+#         title_bottom = 75
+#         type_line_top = 384
+#         type_line_bottom = 423
+#         oracle_text_top = type_line_bottom
+#         oracle_text_bottom = 612
+        
+#     elif image_size == 'large':
+#         edge_left = 36
+#         edge_right = 636
+#         title_top = edge_left
+#         title_bottom = 103
+#         type_line_top = 528
+#         type_line_bottom = 582
+#         oracle_text_top = type_line_bottom
+#         oracle_text_bottom = 848
+
+
+#     output = {
+#         'title': (edge_left, title_top, edge_right, title_bottom),
+#         'type_line': (edge_left, type_line_top, edge_right, type_line_bottom),
+#         'oracle_text': (edge_left, oracle_text_top, edge_right, oracle_text_bottom)
+#     } 
+#     return output

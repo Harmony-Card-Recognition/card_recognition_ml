@@ -1,0 +1,1 @@
+# write some stuff regarding the model's specs (this is to universalize everything I guess)

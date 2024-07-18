@@ -131,11 +131,11 @@ def train_new_CNN_model(
         f.write(f"Initial JSON Grab: {inital_json_grab}\n")
         f.write(f"Unique Classes: {unique_classes}\n")
         f.write('\n')
-        f.write(f'Learning Rate: {learning_rate}')
-        f.write(f'Beta 1: {beta_1}') 
-        f.write(f'Beta 2: {beta_2}') 
-        f.write(f'Loss: {loss}') 
-        f.write(f'metrics: {metrics}') 
+        f.write(f'Learning Rate: {learning_rate}\n')
+        f.write(f'Beta 1: {beta_1}\n') 
+        f.write(f'Beta 2: {beta_2}\n') 
+        f.write(f'Loss: {loss}\n') 
+        f.write(f'metrics: {metrics}\n') 
         f.write('\n')
 
 
@@ -226,23 +226,10 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_ONEPIECE_0.0.11'
+    model_name = 'harmony_cnn_ONEPIECE_0.0.13'
     image_size = 'large'
-    inital_json_grab = 3   # -1 to get all of the objects in the json
-
-    if len(sys.argv) == 1:
-        print('\nrunning with DEFAULT args\n')
-    elif len(sys.argv) == 5:
-        print('\nrunning with CUSTOM args\n')
-        action = int(sys.argv[1])
-        model_name = 'harmony_cnn_' + str(sys.argv[2])
-        image_size = str(sys.argv[3])
-        inital_json_grab = int(sys.argv[4])
-    else:
-        print('\n\nPLEASE CHECK ARGUMENTS')
-        print('python(3) path_to_cnn/cnn.py [action] [model] [size] [count]')
-        print('python(3) path_to_cnn/cnn.py 0 0.0.8 small 3')
-        sys.exit()
+    inital_json_grab = 10 # -1 to get all of the objects in the json
+    large_json_name = 'deckdrafterprod.OnePieceCard.json'
         
     data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
@@ -268,8 +255,8 @@ if __name__ == '__main__':
         # make new model FROM SCRATCH
         print('MAKING NEW MODEL FROM SCRATCH')
         
-        raw_json_filepath = os.path.join(data, '..', 'deckdrafterprod.OnePieceCard.json')
-        formatted_json_filepath = os.path.join(model_filepath, f'deckdrafterprod.OnePieceCard({inital_json_grab}).json')
+        raw_json_filepath = os.path.join(data, '..', large_json_name)
+        formatted_json_filepath = os.path.join(model_filepath, f'{large_json_name[:-5]}({inital_json_grab}).json')
 
         format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
         train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)

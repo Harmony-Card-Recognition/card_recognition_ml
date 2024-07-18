@@ -38,19 +38,14 @@ def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     dataset = dataset.batch(batch_size)
     return dataset
 
-def train_new_CNN_model(
+def train_model(
     image_size,
     model_filepath,
-    train_image_dir,
-    test_image_dir,
-    train_labels_csv,
-    test_labels_csv,
     unique_classes,
     callbacks,
     verbose=True,
     epochs=1000,
 ):
-    """Help: Create and train a CNN model for the provided model_data"""
     model_start_time = time.time()
 
     # img = Image.open(f'{train_image_dir}/0.png') # img.size
@@ -126,10 +121,10 @@ def train_new_CNN_model(
     # save some specs of the model that is being trained
     specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
     with open(specs_filepath, 'w') as f:
-        f.write(f"Model Name: {model_name}\n")
-        f.write(f"Image Size: {image_size}\n")
-        f.write(f"Initial JSON Grab: {inital_json_grab}\n")
-        f.write(f"Unique Classes: {unique_classes}\n")
+        f.write(f'Model Name: {model_name}\n')
+        f.write(f'Image Size: {image_size}\n')
+        f.write(f'Initial JSON Grab: {inital_json_grab}\n')
+        f.write(f'Unique Classes: {unique_classes}\n')
         f.write('\n')
         f.write(f'Learning Rate: {learning_rate}\n')
         f.write(f'Beta 1: {beta_1}\n') 
@@ -138,46 +133,11 @@ def train_new_CNN_model(
         f.write(f'metrics: {metrics}\n') 
         f.write('\n')
 
-
+    # FITTING THE DATA 
     if verbose: print('Network compiled, fitting data now ... \n')
-
-    return fit_model(
-        model,
-        model_filepath,
-        train_image_dir,
-        test_image_dir,
-        train_labels_csv,
-        test_labels_csv,
-        callbacks,
-        model_start_time=model_start_time,
-        verbose=verbose,
-        epochs=epochs,
-    )
-
-def fit_model(
-    model,
-    model_filepath,
-    train_image_dir,
-    test_image_dir,
-    train_labels_csv,
-    test_labels_csv,
-    callbacks,
-    model_start_time,
-    verbose=True,
-    epochs=1000,
-):
-    img = Image.open(f'{train_image_dir}/0.png')
-    img_width, img_height = img.size
-
-    # Load the labels from the CSV files
-    if verbose: print('Loading the labels from the CSV files ...')
-    training_labels = pd.read_csv(train_labels_csv)['label'].values
-    testing_labels = pd.read_csv(test_labels_csv)['label'].values
-    
-    # Create tf.data.Dataset for the training and testing images
     if verbose: print('Creating the training and testing datasets ...')
-    train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(train_image_dir), img_width, img_height, batch_size=32)
-    test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(test_image_dir), img_width, img_height, batch_size=32)
+    train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(f'{model_filepath}/train_images/'), img_width, img_height, batch_size=32)
+    test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(f'{model_filepath}/test_images/'), img_width, img_height, batch_size=32)
     
     # Fit the model using the datasets
     model.fit(
@@ -199,11 +159,10 @@ def fit_model(
     model.save(os.path.join(model_filepath, 'model.keras'))
 
     # save some more model specs
-    specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
     with open(specs_filepath, 'a') as f:
-        f.write(f"Training Time: {get_elapsed_time(model_start_time)}\n")
-        f.write(f"Loss: {loss}\n")
-        f.write(f"Accuracy: {accuracy}\n")
+        f.write(f'Training Time: {get_elapsed_time(model_start_time)}\n')
+        f.write(f'Loss: {loss}\n')
+        f.write(f'Accuracy: {accuracy}\n')
         f.write('\n')
         model.summary(print_fn=lambda x: f.write(x + '\n'))
 
@@ -211,6 +170,9 @@ def fit_model(
         print(f'\nModel evaluated & saved locally at {model_filepath}.keras on {get_current_time()} after {get_elapsed_time(model_start_time)}!\n')
 
     return model
+    
+
+
 
 # =======================================================
 if __name__ == '__main__':
@@ -262,15 +224,11 @@ if __name__ == '__main__':
         train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
 
         
-        model = train_new_CNN_model(
-            image_size,
-            model_filepath,
-            train_image_dir,
-            test_image_dir,
-            train_labels_csv,
-            test_labels_csv,
-            unique_classes,
-            [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
+        model = train_model(
+            image_size=image_size,
+            model_filepath=model_filepath,
+            unique_classes=unique_classes,
+            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
             verbose=True,
             epochs=10000000000000,
         )

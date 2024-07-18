@@ -140,8 +140,8 @@ def get_img_dim(image_size: str) -> Tuple[int, int]:
     elif image_size == 'normal':
         width, height = 488, 680
     elif image_size == 'large':
-        # width, height = 672, 936
-        width, height = 313, 437
+        width, height = 672, 936
+        # width, height = 313, 437
     return width, height
 
 # def get_textbox_dim(image_size: str) -> dict[Tuple[int, int]]:

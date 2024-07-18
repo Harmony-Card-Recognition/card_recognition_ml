@@ -188,9 +188,9 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_ONEPIECE_0.0.13'
+    model_name = 'harmony_cnn_ONEPIECE_0.0.14'
     image_size = 'large'
-    inital_json_grab = 10 # -1 to get all of the objects in the json
+    inital_json_grab =  3 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.OnePieceCard.json'
         
     data = os.path.join(PROJ_PATH, '.data/cnn')

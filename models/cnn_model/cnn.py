@@ -7,7 +7,7 @@ import time as time
 import pandas as pd
 import tensorflow as tf
 
-from tensorflow.python.keras import callbacks, layers, models, optimizers, mixed_precision
+from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision # type: ignore
 
 from PIL import Image
 # from keras import callbacks, layers, models, optimizers, mixed_precision
@@ -87,30 +87,30 @@ def train_model(
     # model.add(layers.Dropout(0.5))
     # model.add(layers.Dense(unique_classes, activation='softmax'))
     model = models.Sequential()
-    model.add(layers.InputLayer(input_shape=(img_width, img_height, 3)))
+    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
     model.add(layers.Conv2D(64, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(128, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(256, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(256, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(512, (3, 3)))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Flatten())
     model.add(layers.Dense(2048))
-    model.add(layers.LeakyReLU(alpha=0.01))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(unique_classes, activation='softmax'))
 
@@ -118,7 +118,7 @@ def train_model(
     learning_rate = 0.0001
     beta_1 = 0.9
     beta_2 = 0.999
-    optimizer = optimizers.adam_v2.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2)
+    optimizer = optimizers.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2)
 
     # Compile the model
     loss = 'sparse_categorical_crossentropy'
@@ -180,27 +180,6 @@ def train_model(
     return model
     
 
-# # GPU OPTIMIZATION
-# def enable_gpu():
-#     # Enable mixed precision
-#     mp = mixed_precision.experimental.Policy('mixed_float16')
-#     mixed_precision.experimental.set_policy(mp)
-
-#     # Configure TensorFlow to use GPU efficiently
-#     gpus = tf.config.experimental.list_physical_devices('GPU')
-#     if gpus:
-#         try:
-#             # Currently, memory growth needs to be the same across GPUs
-#             for gpu in gpus:
-#                 tf.config.experimental.set_memory_growth(gpu, True)
-#             logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-#             print(f"{len(gpus)} Physical GPUs, {len(logical_gpus)} Logical GPUs")
-#         except RuntimeError as e:
-#             # Memory growth must be set before GPUs have been initialized
-#             print('GPU ERROR')
-#             print(e)
-
-
 # =======================================================
 if __name__ == '__main__':
     st = time.time()
@@ -219,7 +198,7 @@ if __name__ == '__main__':
     action = 0
     model_name = 'harmony_cnn_MTG_0.0.21'
     image_size = 'normal'
-    inital_json_grab =  10 # -1 to get all of the objects in the json
+    inital_json_grab =  3 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.MTGCard' # without the '.json'
         
     data = os.path.join(PROJ_PATH, '.data/cnn')

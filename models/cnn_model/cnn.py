@@ -55,59 +55,59 @@ def train_model(
 
     # Define the model
     if verbose: print('Defining the model ...')
-    model = models.Sequential()
-    model.add(layers.Input(shape=(img_width, img_height, 3)))
-    model.add(layers.Conv2D(48, (3, 3)))  # Adjusted number of filters
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Conv2D(96, (3, 3)))  # Adjusted number of filters
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    # Retained this layer but adjusted filters
-    model.add(layers.Conv2D(192, (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    # Removed one 256 filter layer to balance size and complexity
-    model.add(layers.Conv2D(384, (3, 3)))  # Adjusted number of filters
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    # Adjusted the dense layer size to balance the model
-    model.add(layers.Flatten())
-    model.add(layers.Dense(1024))  # Adjusted size
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(unique_classes, activation='softmax'))
     # model = models.Sequential()
     # model.add(layers.Input(shape=(img_width, img_height, 3)))
-    # model.add(layers.Conv2D(64, (3, 3)))
+    # model.add(layers.Conv2D(48, (3, 3)))  # Adjusted number of filters
     # model.add(layers.LeakyReLU(negative_slope=0.01))
     # model.add(layers.MaxPooling2D(2, 2))
 
-    # model.add(layers.Conv2D(128, (3, 3)))
+    # model.add(layers.Conv2D(96, (3, 3)))  # Adjusted number of filters
     # model.add(layers.LeakyReLU(negative_slope=0.01))
     # model.add(layers.MaxPooling2D(2, 2))
 
-    # model.add(layers.Conv2D(256, (3, 3)))
+    # # Retained this layer but adjusted filters
+    # model.add(layers.Conv2D(192, (3, 3)))
     # model.add(layers.LeakyReLU(negative_slope=0.01))
     # model.add(layers.MaxPooling2D(2, 2))
 
-    # model.add(layers.Conv2D(256, (3, 3)))
+    # # Removed one 256 filter layer to balance size and complexity
+    # model.add(layers.Conv2D(384, (3, 3)))  # Adjusted number of filters
     # model.add(layers.LeakyReLU(negative_slope=0.01))
     # model.add(layers.MaxPooling2D(2, 2))
 
-    # model.add(layers.Conv2D(512, (3, 3)))
-    # model.add(layers.LeakyReLU(negative_slope=0.01))
-    # model.add(layers.MaxPooling2D(2, 2))
-
+    # # Adjusted the dense layer size to balance the model
     # model.add(layers.Flatten())
-    # model.add(layers.Dense(2048))
+    # model.add(layers.Dense(1024))  # Adjusted size
     # model.add(layers.LeakyReLU(negative_slope=0.01))
     # model.add(layers.Dropout(0.5))
     # model.add(layers.Dense(unique_classes, activation='softmax'))
+    model = models.Sequential()
+    model.add(layers.Input(shape=(img_width, img_height, 3)))
+    model.add(layers.Conv2D(64, (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Conv2D(128, (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Conv2D(256, (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Conv2D(256, (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Conv2D(512, (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    model.add(layers.Flatten())
+    model.add(layers.Dense(2048))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(unique_classes, activation='softmax'))
 
     # Define the optimizer
     learning_rate = 0.0001
@@ -196,6 +196,7 @@ def enable_gpu():
 
 # =======================================================
 if __name__ == '__main__':
+    st = time.time()
     # enable_gpu()
     # ACTION:
         # 0 : you want to make a new model from scratch
@@ -209,9 +210,9 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_MTG_0.0.18'
+    model_name = 'harmony_cnn_MTG_0.0.19'
     image_size = 'large'
-    inital_json_grab =  100 # -1 to get all of the objects in the json
+    inital_json_grab =  10 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.MTGCard' # without the '.json'
         
     data = os.path.join(PROJ_PATH, '.data/cnn')
@@ -287,5 +288,5 @@ if __name__ == '__main__':
         pass
     else:
         print('Invalid action value. Please choose a valid action.')
-
+    print(f'TOTAL TIME: {get_elapsed_time(st)}')
 # ===========================================================================================================

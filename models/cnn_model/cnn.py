@@ -188,10 +188,10 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_ONEPIECE_0.0.14'
+    model_name = 'harmony_cnn_LORCANA_0.0.16'
     image_size = 'large'
     inital_json_grab =  3 # -1 to get all of the objects in the json
-    large_json_name = 'deckdrafterprod.OnePieceCard.json'
+    large_json_name = 'deckdrafterprod.LorcanaCard' # without the '.json'
         
     data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
@@ -217,8 +217,8 @@ if __name__ == '__main__':
         # make new model FROM SCRATCH
         print('MAKING NEW MODEL FROM SCRATCH')
         
-        raw_json_filepath = os.path.join(data, '..', large_json_name)
-        formatted_json_filepath = os.path.join(model_filepath, f'{large_json_name[:-5]}({inital_json_grab}).json')
+        raw_json_filepath = os.path.join(data, '..', f'{large_json_name}.json')
+        formatted_json_filepath = os.path.join(model_filepath, f'{large_json_name}({inital_json_grab}).json')
 
         format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
         train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)

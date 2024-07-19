@@ -196,7 +196,7 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'MTG_0.0.0(test_old_server)'
+    model_name = 'MTG_0.0.0(test_WITH_CUDA)'
     image_size = 'normal'
     inital_json_grab =  100 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.MTGCard' # without the '.json'

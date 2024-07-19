@@ -8,7 +8,7 @@ import pandas as pd
 import tensorflow as tf
 
 from PIL import Image
-from keras import callbacks, layers, models, optimizers
+from keras import callbacks, layers, models, optimizers, mixed_precision
 from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback
 
 from helper.image_processing import get_tensor_from_dir, get_img_dim
@@ -177,7 +177,7 @@ def train_model(
 # GPU OPTIMIZATION
 def enable_gpu():
     # Enable mixed precision
-    mixed_precision = tf.keras.mixed_precision.experimental.set_policy('mixed_float16')
+    mp = mixed_precision.set_global_policy('mixed_float16')
 
     # Configure TensorFlow to use GPU efficiently
     gpus = tf.config.experimental.list_physical_devices('GPU')

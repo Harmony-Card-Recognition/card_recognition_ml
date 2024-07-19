@@ -53,6 +53,8 @@ def train_model(
     img = Image.open(f'{train_image_dir}/0.png')
     img_width, img_height = img.size
 
+    img_width, img_height = 450, 650 
+
     # Define the model
     if verbose: print('Defining the model ...')
     # model = models.Sequential()
@@ -132,7 +134,8 @@ def train_model(
         f.write(f'Beta 1: {beta_1}\n') 
         f.write(f'Beta 2: {beta_2}\n') 
         f.write(f'Loss: {loss}\n') 
-        f.write(f'metrics: {metrics}\n') 
+        f.write(f'metrics: {metrics}\n')
+        f.write(f'Preprocessed Image Dimensions (wxh): {img_width}x{img_height}')
         f.write('\n')
 
     # FITTING THE DATA 

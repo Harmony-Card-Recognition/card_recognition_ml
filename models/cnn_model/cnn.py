@@ -196,10 +196,10 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'MTG_0.0.0(test_WITH_CUDA)'
-    image_size = 'normal'
-    inital_json_grab =  100 # -1 to get all of the objects in the json
-    large_json_name = 'deckdrafterprod.MTGCard' # without the '.json'
+    model_name = 'LORCANA_0.0.0'
+    image_size = 'large'
+    inital_json_grab =  -1 # -1 to get all of the objects in the json
+    large_json_name = 'deckdrafterprod.LorcanaCard' # without the '.json'
         
     data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     # =======================================
     # CALLBACKS
 
-    accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.95)
+    accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.98)
 
     checkpoint_filepath = os.path.join(model_filepath, 'model_checkpoint.keras')
     checkpoint_callback = callbacks.ModelCheckpoint(

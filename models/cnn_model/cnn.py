@@ -87,7 +87,7 @@ def train_model(
     # model.add(layers.Dropout(0.5))
     # model.add(layers.Dense(unique_classes, activation='softmax'))
     model = models.Sequential()
-    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
+    model.add(layers.InputLayer(input_shape=(img_width, img_height, 3)))
     model.add(layers.Conv2D(64, (3, 3)))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))

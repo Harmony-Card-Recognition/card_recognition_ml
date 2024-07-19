@@ -210,7 +210,7 @@ if __name__ == '__main__':
     action = 0
     model_name = 'harmony_cnn_MTG_0.0.17'
     image_size = 'large'
-    inital_json_grab =  100 # -1 to get all of the objects in the json
+    inital_json_grab =  10 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.MTGCard' # without the '.json'
         
     data = os.path.join(PROJ_PATH, '.data/cnn')

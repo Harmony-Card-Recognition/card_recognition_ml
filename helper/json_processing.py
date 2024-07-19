@@ -189,7 +189,7 @@ def filter_attributes_json(json_filepath:str, attributes:list[str], verbose:bool
 
     if verbose: print("Finished filtering!")
 
-def format_image_attributes(json_filepath:str, image_size:str, image_attribute_label:str = 'image_uris', verbose:bool=True):
+def format_image_attributes(json_filepath:str, image_size:str, image_attribute_label:str, verbose:bool=True):
     if verbose: print(f'Formatting {json_filepath} with {image_size} image size')
 
     # Load the JSON file
@@ -237,7 +237,7 @@ def encode_alphanumeric_to_int(json_filepath:str):
 # ==================================================
 
 
-def format_json(raw_json_filepath:str, new_filepath:str, image_count:int, image_size:str, attributes:list[str] = ['_id', 'images'], verbose:bool=True):
+def format_json(raw_json_filepath:str, new_filepath:str, image_count:int, image_size:str, attributes:list[str] = ['_id', 'image_uris'], verbose:bool=True):
     if verbose: print('\n--- CREATING SEPERATE JSON ---')
     create_smaller_json(json_filepath=raw_json_filepath, new_filepath=new_filepath, image_count=image_count)
 
@@ -245,6 +245,6 @@ def format_json(raw_json_filepath:str, new_filepath:str, image_count:int, image_
     filter_attributes_json(json_filepath=new_filepath, attributes=attributes)
 
     if verbose: print('\n--- FORMATTING JSON ATTRIBUTES ---')
-    format_image_attributes(json_filepath=new_filepath, image_size=image_size, image_attribute_label='images')
+    format_image_attributes(json_filepath=new_filepath, image_size=image_size, image_attribute_label='image_uris')
 
     if verbose: print('\n--- JSON FULLY FORMATTED ---\n')

@@ -50,6 +50,8 @@ def train_model(
 
     # img = Image.open(f'{train_image_dir}/0.png') # img.size
     img_width, img_height = get_img_dim(image_size)
+    img = Image.open(f'{train_image_dir}/0.png')
+    img_width, img_height = img.size
 
     # Define the model
     if verbose: print('Defining the model ...')
@@ -188,7 +190,7 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_LORCANA_0.0.16'
+    model_name = 'harmony_cnn_LORCANA_0.0.17'
     image_size = 'large'
     inital_json_grab =  3 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.LorcanaCard' # without the '.json'

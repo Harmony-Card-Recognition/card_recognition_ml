@@ -118,7 +118,7 @@ def train_model(
     learning_rate = 0.0001
     beta_1 = 0.9
     beta_2 = 0.999
-    optimizer = optimizers.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2)
+    optimizer = optimizers.adam_v2.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2)
 
     # Compile the model
     loss = 'sparse_categorical_crossentropy'
@@ -180,24 +180,25 @@ def train_model(
     return model
     
 
-# GPU OPTIMIZATION
-def enable_gpu():
-    # Enable mixed precision
-    mp = mixed_precision.set_global_policy('mixed_float16')
+# # GPU OPTIMIZATION
+# def enable_gpu():
+#     # Enable mixed precision
+#     mp = mixed_precision.experimental.Policy('mixed_float16')
+#     mixed_precision.experimental.set_policy(mp)
 
-    # Configure TensorFlow to use GPU efficiently
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        try:
-            # Currently, memory growth needs to be the same across GPUs
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-            print(f"{len(gpus)} Physical GPUs, {len(logical_gpus)} Logical GPUs")
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print('GPU ERROR')
-            print(e)
+#     # Configure TensorFlow to use GPU efficiently
+#     gpus = tf.config.experimental.list_physical_devices('GPU')
+#     if gpus:
+#         try:
+#             # Currently, memory growth needs to be the same across GPUs
+#             for gpu in gpus:
+#                 tf.config.experimental.set_memory_growth(gpu, True)
+#             logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+#             print(f"{len(gpus)} Physical GPUs, {len(logical_gpus)} Logical GPUs")
+#         except RuntimeError as e:
+#             # Memory growth must be set before GPUs have been initialized
+#             print('GPU ERROR')
+#             print(e)
 
 
 # =======================================================

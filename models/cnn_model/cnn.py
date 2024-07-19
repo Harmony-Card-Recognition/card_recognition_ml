@@ -210,8 +210,8 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'harmony_cnn_MTG_0.0.19'
-    image_size = 'large'
+    model_name = 'harmony_cnn_MTG_0.0.20'
+    image_size = 'normal'
     inital_json_grab =  10 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.MTGCard' # without the '.json'
         

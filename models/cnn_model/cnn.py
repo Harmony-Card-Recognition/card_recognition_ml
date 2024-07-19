@@ -8,7 +8,7 @@ import pandas as pd
 import tensorflow as tf
 
 from PIL import Image
-from keras import callbacks, layers, models, optimizers, mixed_precision
+from keras import callbacks, layers, models, optimizers, mixed_precision, preprocessing, utils 
 from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback
 
 from helper.image_processing import get_tensor_from_dir, get_img_dim
@@ -19,7 +19,7 @@ from helper.json_processing import format_json, get_datasets
 
 
 
-def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
+def create_dataset_tensorflow(csv_file, image_dir, img_width, img_height, batch_size):
     # Load the CSV file
     df = pd.read_csv(csv_file)
 
@@ -36,6 +36,33 @@ def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     dataset = tf.data.Dataset.from_tensor_slices((image_paths, labels))
     dataset = dataset.map(lambda image, label: (get_tensor_from_dir(image, img_width, img_height), label))
     dataset = dataset.batch(batch_size)
+    return dataset
+
+
+
+def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
+    # Load the CSV file
+    df = pd.read_csv(csv_file)
+
+    # Get the filenames and labels from the CSV file
+    filenames = df['filename'].tolist()
+    labels = df['label'].tolist()
+
+    # Join the filenames with the directory path
+    image_paths = [os.path.join(image_dir, f) for f in filenames]
+
+    # Convert labels to categorical (if they are not already)
+    labels = utils.to_categorical(labels)
+
+    # Use Keras ImageDataGenerator for dataset creation
+    datagen = preprocessing.image.ImageDataGenerator()
+    dataset = datagen.flow_from_directory(
+        image_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='categorical'
+    )
+
     return dataset
 
 def train_model(
@@ -84,7 +111,7 @@ def train_model(
     # model.add(layers.Dropout(0.5))
     # model.add(layers.Dense(unique_classes, activation='softmax'))
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(img_width, img_height, 3)))
+    model.add(layers.Input(shape=(img_width, img_height, 3)))
     model.add(layers.Conv2D(64, (3, 3)))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))

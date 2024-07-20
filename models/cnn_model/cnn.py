@@ -3,7 +3,8 @@ PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.append(PROJ_PATH)
 
 
-import time as time
+import time 
+import json
 import pandas as pd
 import tensorflow as tf
 
@@ -46,6 +47,8 @@ def train_model(
     image_size,
     model_filepath,
     unique_classes,
+    img_width, 
+    img_height, 
     callbacks,
     verbose=True,
     epochs=1000,
@@ -56,36 +59,9 @@ def train_model(
     # img = Image.open(f'{train_image_dir}/0.png')
     # img_width, img_height = img.size
 
-    img_width, img_height = 450, 650 
 
     # Define the model
     if verbose: print('Defining the model ...')
-    # model = models.Sequential()
-    # model.add(layers.Input(shape=(img_width, img_height, 3)))
-    # model.add(layers.Conv2D(48, (3, 3)))  # Adjusted number of filters
-    # model.add(layers.LeakyReLU(negative_slope=0.01))
-    # model.add(layers.MaxPooling2D(2, 2))
-
-    # model.add(layers.Conv2D(96, (3, 3)))  # Adjusted number of filters
-    # model.add(layers.LeakyReLU(negative_slope=0.01))
-    # model.add(layers.MaxPooling2D(2, 2))
-
-    # # Retained this layer but adjusted filters
-    # model.add(layers.Conv2D(192, (3, 3)))
-    # model.add(layers.LeakyReLU(negative_slope=0.01))
-    # model.add(layers.MaxPooling2D(2, 2))
-
-    # # Removed one 256 filter layer to balance size and complexity
-    # model.add(layers.Conv2D(384, (3, 3)))  # Adjusted number of filters
-    # model.add(layers.LeakyReLU(negative_slope=0.01))
-    # model.add(layers.MaxPooling2D(2, 2))
-
-    # # Adjusted the dense layer size to balance the model
-    # model.add(layers.Flatten())
-    # model.add(layers.Dense(1024))  # Adjusted size
-    # model.add(layers.LeakyReLU(negative_slope=0.01))
-    # model.add(layers.Dropout(0.5))
-    # model.add(layers.Dense(unique_classes, activation='softmax'))
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
     model.add(layers.Conv2D(64, (3, 3)))
@@ -183,7 +159,6 @@ def train_model(
 # =======================================================
 if __name__ == '__main__':
     st = time.time()
-    # enable_gpu()
     # ACTION:
         # 0 : you want to make a new model from scratch
             # downloads the images
@@ -198,12 +173,18 @@ if __name__ == '__main__':
     action = 0
     model_name = 'ONEPIECE_0.0.0'
     image_size = 'large'
-    inital_json_grab =  -1 # -1 to get all of the objects in the json
+    inital_json_grab =  3 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.OnePieceCard' # without the '.json'
-        
+    img_width, img_height = 450, 650 
+
+    
     data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
     os.makedirs(model_filepath)
+    
+    metadata_filepath = os.path.join(model_filepath, '.metadata.json') 
+    with open(metadata_filepath, 'w') as file:
+        json.dump([{'img_width': img_width, 'img_height': img_height}], file, indent=4)
 
     # =======================================
     # CALLBACKS
@@ -239,6 +220,8 @@ if __name__ == '__main__':
             image_size=image_size,
             model_filepath=model_filepath,
             unique_classes=unique_classes,
+            img_width=img_width, 
+            img_height=img_height,
             callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
             verbose=True,
             epochs=10000000000000,

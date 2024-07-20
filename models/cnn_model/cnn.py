@@ -171,10 +171,10 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'ONEPIECE_0.0.0'
+    model_name = 'LORCANA_0.0.0'
     image_size = 'large'
     inital_json_grab =  -1 # -1 to get all of the objects in the json
-    large_json_name = 'deckdrafterprod.OnePieceCard' # without the '.json'
+    large_json_name = 'deckdrafterprod.LorcanaCard' # without the '.json'
     img_width, img_height = 450, 650 
 
     

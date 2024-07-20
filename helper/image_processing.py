@@ -110,23 +110,24 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
     return image
 
 
-
+def preprocess_tensor(image: tf.Tensor, img_width: int, img_height: int) -> tf.Tensor:
+    img = tf.image.resize(image, [img_width, img_height])
+    img = img / 255.0
+    return img
 
 
 
 def get_tensor_from_dir(image_path: str, img_width: int, img_height: int) -> tf.Tensor:
     img = tf.io.read_file(image_path)
     img = tf.image.decode_jpeg(img, channels=3)
-    img = tf.image.resize(img, [img_width, img_height])
-    img = img / 255.0
+    img = preprocess_tensor(image=img, img_width=img_width, img_height=img_height)
     return img
 
 def get_tensor_from_image(image: Image.Image, img_width: int, img_height: int) -> tf.Tensor:
     image_array = np.array(image)
     img = tf.convert_to_tensor(image_array, dtype=tf.float32)
-    img = tf.image.resize(img, [img_width, img_height])
-    img = img / 255.0
-    return img
+    img = preprocess_tensor(image=img, img_width=img_width, img_height=img_height) 
+    return img  
 
 def get_image_from_uri(image_uri: str) -> Image.Image:
     response = requests.get(image_uri)

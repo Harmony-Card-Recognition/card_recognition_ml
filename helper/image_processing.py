@@ -73,7 +73,7 @@ def adjust_sharpness(image):
 # =====================================================
 
 
-def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = False) -> Image.Image:
+def random_edit_img_old(image: Image.Image, distort: bool = True, verbose: bool = False) -> Image.Image:
     """Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
     the image if need be."""
 
@@ -112,7 +112,7 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
 
 # =====================================================
 
-def random_edit_img_tf(image: Image.Image, distort: bool = True, verbose: bool = False) -> Image.Image:
+def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = False) -> Image.Image:
     """Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
     the image if need be, using TensorFlow for GPU acceleration where possible."""
 

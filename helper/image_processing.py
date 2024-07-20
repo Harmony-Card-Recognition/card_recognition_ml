@@ -124,7 +124,7 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
     tensor = get_tensor_from_image(image=image, img_width=image.width, img_height=image.height) 
 
     if distort:
-        edit_permission = np.random.choice(a=[False, True], size=(2))
+        edit_permission = np.random.choice(a=[False, True], size=(6))
         
         if edit_permission[0]:
             tensor = tf.image.random_brightness(tensor, max_delta=0.1)

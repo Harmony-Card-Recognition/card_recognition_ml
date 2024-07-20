@@ -157,9 +157,9 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
 
     # Convert back to PIL Image
     tensor = tensor * 255.0
-    image_array = np.clip(tensor.numpy(), 0, 255)
-    image_array = image_array.astype(np.uint8)
-    image = Image.fromarray(image_array)
+    # image_array = np.clip(tensor.numpy(), 0, 255)
+    # image_array = image_array.astype(np.uint8)
+    image = Image.fromarray(tensor.numpy())
     
     return image
 

@@ -42,7 +42,8 @@ def predict_folder(model_path, overall_json_path, img_folder_path):
         predicted_obj = find_object_by_id(overall_json_path, predicted_id)
         if predicted_obj is not None: predicted_name = predicted_obj['productUrlName'] 
         else: predicted_name = None
-        predictions[i][image_name] = {'_id': predicted_id, 'productUrlName': predicted_name, 'confidence': str(confidence)}
+        # predictions[i][image_name] = {'_id': predicted_id, 'productUrlName': predicted_name, 'confidence': str(confidence)}
+        predictions.append({image_name:{'_id': predicted_id, 'productUrlName': predicted_name, 'confidence': str(confidence)}})
  
     overall_predict_time = get_elapsed_time(st) 
     ave_time_per_card = (time.time()-st)/len(images)# overall_predict_time/len(images)

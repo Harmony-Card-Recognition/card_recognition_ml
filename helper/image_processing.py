@@ -155,18 +155,6 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
                 print(f"JPEG quality adjusted with quality={quality}")
 
 
-    # Convert back to PIL Image
-    # tensor = tensor * 255.0
-    # image_array = np.clip(tensor.numpy(), 0, 255)
-    # image_array = image_array.astype(np.uint8)
-    # image = Image.fromarray(tensor.numpy())
-
-
-    # tensor = tf.image.convert_image_dtype(tensor, dtype=tf.float32)
-    # image_array = tensor.numpy()
-    # image_array = (image_array * 255).astype('uint8')
-    # image = Image.fromarray(image_array)
-    # 
     tensor = tf.image.convert_image_dtype(tensor, dtype=tf.float32)
     tensor_uint8 = tf.cast(tensor * 255, tf.uint8)
     image_array = tensor_uint8.numpy()

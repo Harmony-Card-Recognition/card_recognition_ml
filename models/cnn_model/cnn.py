@@ -55,11 +55,6 @@ def train_model(
 ):
     model_start_time = time.time()
 
-    # img_width, img_height = get_img_dim(image_size)
-    # img = Image.open(f'{train_image_dir}/0.png')
-    # img_width, img_height = img.size
-
-
     # Define the model
     if verbose: print('Defining the model ...')
     model = models.Sequential()
@@ -188,20 +183,19 @@ if __name__ == '__main__':
 
     # =======================================
     # CALLBACKS
-
+    # defines when the model will stop training
     accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.98)
-
+    # saves a snapshot of the model while it is training
+    # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
     checkpoint_filepath = os.path.join(model_filepath, 'model_checkpoint.keras')
     checkpoint_callback = callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
         save_weights_only=False,
         save_best_only=False
     )
-
+    # logs the epoch, accuracy, and loss for a training session
+    # note: removing this would also probably result in a performance increase
     csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'csv_logs.csv'))  
-
-    # =======================================
-
 
     # =======================================
 
@@ -228,33 +222,15 @@ if __name__ == '__main__':
         )
 
     elif action == 1:
-        # # KEEP TRAINING EXSISTING MODEL
-        # print('CONTINUING TRAINING ON EXSISTING MODEL')
+        print('CONTINUING TRAINING ON EXSISTING MODEL') 
+        # this takes in the last checkpoint
+        # if the model crashed, then there is no 'final' model to start training again
+        # if you did want to load this based on the final model from the previous training session, use the following
+        # os.path.join(model_filepath, 'model.keras')
+        model = models.load_model(checkpoint_filepath)
 
-        # formatted_json_filepath = f'{data}/deckdrafterprod.MTGCard_small({inital_json_grab}).json'
-        # train_image_dir = f'{model_filepath}train_images'
-        # test_image_dir = f'{model_filepath}test_images'
-        # train_labels_csv = f'{model_filepath}train_labels.csv'
-        # test_labels_csv = f'{model_filepath}test_labels.csv'
-
-        # # unique_classes= pd.read_csv(train_labels_csv)['label'].nunique()
-        # # print(f'Unique Classes: {unique_classes}')
-
-        # loaded_model = models.load_model(checkpoint_filepath)
-        # model = fit_model(
-        #     loaded_model,
-        #     model_filepath,
-        #     train_image_dir,
-        #     test_image_dir,
-        #     train_labels_csv,
-        #     test_labels_csv,
-        #     model_start_time=time.time()
-        #     [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
-        #     verbose=True,
-        #     
-        # epochs=10000000000000,
-        # )
-        pass
+        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
+        # start the training process for the model 
     else:
         print('Invalid action value. Please choose a valid action.')
     print(f'TOTAL TIME: {get_elapsed_time(st)}')

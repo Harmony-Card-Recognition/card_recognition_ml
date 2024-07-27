@@ -17,10 +17,7 @@ from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallb
 from helper.image_processing import get_tensor_from_dir, get_img_dim
 from helper.helper import get_current_time, get_elapsed_time
 from helper.json_processing import format_json, get_datasets
-
-
-
-
+from helper.model_specs import pre_save_model_specs, post_save_model_specs
 
 def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     # Load the CSV file
@@ -41,20 +38,17 @@ def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     dataset = dataset.batch(batch_size)
     return dataset
 
-
-
-def train_model(
-    image_size,
-    model_filepath,
+def compile_model(
     unique_classes,
     img_width, 
     img_height, 
-    callbacks,
+    learning_rate, 
+    beta_1, 
+    beta_2, 
+    metrics,
+    loss,
     verbose=True,
-    epochs=1000,
 ):
-    model_start_time = time.time()
-
     # Define the model
     if verbose: print('Defining the model ...')
     model = models.Sequential()
@@ -86,38 +80,45 @@ def train_model(
     model.add(layers.Dense(unique_classes, activation='softmax'))
 
     # Define the optimizer
-    learning_rate = 0.0001
-    beta_1 = 0.9
-    beta_2 = 0.999
     optimizer = optimizers.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2)
 
     # Compile the model
-    loss = 'sparse_categorical_crossentropy'
-    metrics = ['accuracy']
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
 
     # save some specs of the model that is being trained
     specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
-    with open(specs_filepath, 'w') as f:
-        f.write(f'Model Name: {model_name}\n')
-        f.write(f'Image Size: {image_size}\n')
-        f.write(f'Initial JSON Grab: {inital_json_grab}\n')
-        f.write(f'Unique Classes: {unique_classes}\n')
-        f.write('\n')
-        f.write(f'Learning Rate: {learning_rate}\n')
-        f.write(f'Beta 1: {beta_1}\n') 
-        f.write(f'Beta 2: {beta_2}\n') 
-        f.write(f'Loss: {loss}\n') 
-        f.write(f'metrics: {metrics}\n')
-        f.write(f'Preprocessed Image Dimensions (wxh): {img_width}x{img_height}')
-        f.write('\n')
+    pre_save_model_specs(
+        specs_filepath=specs_filepath,
+        model_name=model_name,
+        image_size=image_size,
+        inital_json_grab=inital_json_grab,
+        unique_classes=unique_classes,
+        learning_rate=learning_rate,
+        beta_1=beta_1,
+        beta_2=beta_2,
+        metrics=metrics,
+        loss=loss,
+        img_width=img_width,
+        img_height=img_height,
+    )
+    return model
 
+def fit_model(
+    model,
+    model_filepath,
+    img_width, 
+    img_height, 
+    callbacks,
+    verbose=True,
+    epochs=1000,
+):
     # FITTING THE DATA 
     if verbose: print('Network compiled, fitting data now ... \n')
     if verbose: print('Creating the training and testing datasets ...')
     train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(f'{model_filepath}/train_images/'), img_width, img_height, batch_size=32)
     test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(f'{model_filepath}/test_images/'), img_width, img_height, batch_size=32)
-    
+
+    st = time.time() 
     # Fit the model using the datasets
     model.fit(
         train_dataset,
@@ -134,22 +135,25 @@ def train_model(
     print(f'Loss: {loss}')
     print(f'Accuracy: {accuracy}')
 
+
+    specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
+    training_time = get_elapsed_time(st)
+    post_save_model_specs(
+        specs_filepath=specs_filepath,
+        training_time=training_time,
+        loss=loss,
+        accuracy=accuracy,
+        model=model,
+    )
+
     # save it locally for future reuse
     model.save(os.path.join(model_filepath, 'model.keras'))
 
-    # save some more model specs
-    with open(specs_filepath, 'a') as f:
-        f.write(f'Training Time: {get_elapsed_time(model_start_time)}\n')
-        f.write(f'Loss: {loss}\n')
-        f.write(f'Accuracy: {accuracy}\n')
-        f.write('\n')
-        model.summary(print_fn=lambda x: f.write(x + '\n'))
 
     if verbose:
-        print(f'\nModel evaluated & saved locally at {model_filepath}.keras on {get_current_time()} after {get_elapsed_time(model_start_time)}!\n')
+        print(f'\nModel evaluated & saved locally at {model_filepath}.keras on {get_current_time()} after {training_time}!\n')
 
     return model
-    
 
 # =======================================================
 if __name__ == '__main__':
@@ -166,16 +170,24 @@ if __name__ == '__main__':
             # continues to fit the model
 
     action = 0
-    model_name = 'LORCANA_0.0.1'
+    model_name = 'LORCANA_0.1.0'
     image_size = 'large'
     inital_json_grab =  -1 # -1 to get all of the objects in the json
     large_json_name = 'deckdrafterprod.LorcanaCard' # without the '.json'
     img_width, img_height = 450, 650 
+    learning_rate = 0.0001
+    beta_1 = 0.9
+    beta_2 = 0.999
+    metrics = ['accuracy']
+    loss = 'sparse_categorical_crossentropy'
 
     
     data = os.path.join(PROJ_PATH, '.data/cnn')
     model_filepath = os.path.join(data, model_name)
-    os.makedirs(model_filepath)
+    if not os.path.exists(model_filepath):
+        os.makedirs(model_filepath)
+        
+    formatted_json_filepath = os.path.join(model_filepath, f'{large_json_name}({inital_json_grab}).json')
     
     metadata_filepath = os.path.join(model_filepath, '.metadata.json') 
     with open(metadata_filepath, 'w') as file:
@@ -204,17 +216,27 @@ if __name__ == '__main__':
         print('MAKING NEW MODEL FROM SCRATCH')
         
         raw_json_filepath = os.path.join(data, '..', f'{large_json_name}.json')
-        formatted_json_filepath = os.path.join(model_filepath, f'{large_json_name}({inital_json_grab}).json')
 
         format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
-        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
+        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(formatted_json_filepath, model_filepath)
 
-        
-        model = train_model(
-            image_size=image_size,
-            model_filepath=model_filepath,
+
+
+        model = compile_model(
             unique_classes=unique_classes,
-            img_width=img_width, 
+            img_width=img_width,
+            img_height=img_height,
+            learning_rate=learning_rate,
+            beta_1=beta_1,
+            beta_2=beta_2,
+            metrics=metrics,
+            loss=loss,
+            verbose=True,
+        )
+        model = fit_model(
+            model=model,
+            model_filepath=model_filepath,
+            img_width=img_width,
             img_height=img_height,
             callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
             verbose=True,
@@ -229,8 +251,18 @@ if __name__ == '__main__':
         # os.path.join(model_filepath, 'model.keras')
         model = models.load_model(checkpoint_filepath)
 
-        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes= get_datasets(formatted_json_filepath, model_filepath)
+        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(formatted_json_filepath, model_filepath)
+
         # start the training process for the model 
+        model = fit_model(
+            model=model,
+            model_filepath=model_filepath,
+            img_width=img_width,
+            img_height=img_height,
+            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
+            verbose=True,
+            epochs=10000000000000,
+        )
     else:
         print('Invalid action value. Please choose a valid action.')
     print(f'TOTAL TIME: {get_elapsed_time(st)}')

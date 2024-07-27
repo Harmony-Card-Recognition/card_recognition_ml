@@ -165,7 +165,7 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
 
 
 def preprocess_tensor(image: tf.Tensor, img_width: int, img_height: int) -> tf.Tensor:
-    img = tf.image.resize(image, [img_width, img_height])
+    img = tf.image.resize(image, [img_height, img_width])
     img = img / 255.0
     return img
 

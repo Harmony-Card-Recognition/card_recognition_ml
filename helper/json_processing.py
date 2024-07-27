@@ -10,6 +10,7 @@ from io import BytesIO
 from copy import deepcopy
 
 from helper.image_processing import random_edit_img
+from helper.helper import generate_unique_filename
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -55,24 +56,27 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
         except UnidentifiedImageError:
             if verbose: print(f'Error: UnidentifiedImageError for {row["_id"]}')
             continue
+        # I DON'T THINK THAT THERE SHOULD BE OVERLAPPING IMAGES IN THE TESTING AND TRAINGING DATASETS
+        # ONLY THE TESTING DATASET SHOULD HAVE THE ORIGINAL IMAGES TO PREVENT OVERFITTING
+        # # Save the original image to a file, using the index as the filename
+        # img_path = os.path.join(train_image_dir, f'{i}.png')
+        # img.save(img_path)
 
-        # Save the original image to a file, using the index as the filename
-        img_path = os.path.join(train_image_dir, f'{i}.png')
-        img.save(img_path)
-
-        # Add the label to the training labels list
-        training_labels.append(unique_index)
-        training_csv_filenames.append(f'{i}.png')
-        training_csv_ids.append(f'{row["_id"]}')
+        # # Add the label to the training labels list
+        # training_labels.append(unique_index)
+        # training_csv_filenames.append(f'{i}.png')
+        # training_csv_ids.append(f'{row["_id"]}')
 
         # Create distorted versions of the image for training
-        for j in range(8):
+        for j in range(3):
             distorted_img = random_edit_img(img)
-            distorted_img_path = os.path.join(train_image_dir, f'{i}_distorted({j}).png')
+            # distorted_img_path = os.path.join(train_image_dir, f'{i}_distorted({j}).png')
+            distorted_img_filename = generate_unique_filename(train_image_dir, f'{i}_distorted', 'png') 
+            distorted_img_path = os.path.join(train_image_dir, distorted_img_filename)
             distorted_img.save(distorted_img_path)
 
             training_labels.append(unique_index)
-            training_csv_filenames.append(f'{i}.png')
+            training_csv_filenames.append(distorted_img_filename)
             training_csv_ids.append(f'{row["_id"]}')
 
 
@@ -84,6 +88,17 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
         testing_labels.append(unique_index)
         testing_csv_filenames.append(f'{i}.png')
         testing_csv_ids.append(f'{row["_id"]}')
+
+        for j in range(2):
+            distorted_img = random_edit_img(img)
+            # distorted_img_path = os.path.join(test_image_dir, f'{i}_distorted({j}).png')
+            distorted_img_filename = generate_unique_filename(test_image_dir, f'{i}_distorted', 'png') 
+            distorted_img_path = os.path.join(test_image_dir, distorted_img_filename)
+            distorted_img.save(distorted_img_path)
+
+            testing_labels.append(unique_index)
+            testing_csv_filenames.append(distorted_img_filename)
+            testing_csv_ids.append(f'{row["_id"]}')
 
         # create a dataset for testing (or validation)
         # for i in range(1):

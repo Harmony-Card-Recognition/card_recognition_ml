@@ -68,7 +68,7 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
         # training_csv_ids.append(f'{row["_id"]}')
 
         # Create distorted versions of the image for training
-        for j in range(3):
+        for j in range(15):
             distorted_img = random_edit_img(img)
             # distorted_img_path = os.path.join(train_image_dir, f'{i}_distorted({j}).png')
             distorted_img_filename = generate_unique_filename(train_image_dir, f'{i}_distorted', 'png') 

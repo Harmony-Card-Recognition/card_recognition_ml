@@ -3,7 +3,7 @@ import keras
 import tensorflow as tf
 import gc
 
-class CsvLoggerCallback(keras.callbacks.Callback):
+class CsvLoggerCallback(tf.keras.callbacks.Callback):
     def __init__(self, filename):
         self.filename = filename
 
@@ -16,9 +16,7 @@ class CsvLoggerCallback(keras.callbacks.Callback):
                 writer.writerow(['epoch'] + list(logs.keys()))
             writer.writerow([epoch] + list(logs.values()))
 
-
-
-class ValidationAccuracyThresholdCallback(keras.callbacks.Callback):
+class ValidationAccuracyThresholdCallback(tf.keras.callbacks.Callback):
     def __init__(self, threshold):
         super(ValidationAccuracyThresholdCallback, self).__init__()
         self.threshold = threshold
@@ -27,3 +25,11 @@ class ValidationAccuracyThresholdCallback(keras.callbacks.Callback):
         if logs.get("val_accuracy") >= self.threshold:
             self.model.stop_training = True
 
+class ClearMemory(tf.keras.callbacks.Callback):
+    def on_train_batch_end(self, batch, logs=None):
+        tf.tidy(lambda: tf.keras.backend.clear_session())
+        gc.collect()
+        # Dispose of any tensors that are no longer needed
+        for tensor in tf.compat.v1.get_default_graph().get_operations():
+            if tensor.type == 'Const':
+                tensor.outputs[0].dispose()

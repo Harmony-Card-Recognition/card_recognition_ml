@@ -212,7 +212,7 @@ if __name__ == '__main__':
     )
     # logs the epoch, accuracy, and loss for a training session
     # note: removing this would also probably result in a performance increase
-    csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'csv_logs.csv'))  
+    csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'training_logs.csv'))  
 
     # Define the ReduceLROnPlateau callback
     reduce_lr = callbacks.ReduceLROnPlateau(
@@ -230,13 +230,18 @@ if __name__ == '__main__':
         
         raw_json_filepath = os.path.join(data, '..', f'{large_json_name}.json')
 
-        format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
-        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(
-            formatted_json_filepath, 
-            model_filepath
-        )
+        # format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
+        # train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(
+        #     formatted_json_filepath, 
+        #     model_filepath
+        # )
 
 
+        train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
+        test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
+        train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
+        test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
+        unique_classes = 993 
 
         model = compile_model(
             unique_classes=unique_classes,

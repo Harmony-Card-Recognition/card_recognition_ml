@@ -27,7 +27,7 @@ class ValidationAccuracyThresholdCallback(tf.keras.callbacks.Callback):
 
 class ClearMemory(tf.keras.callbacks.Callback):
     def on_train_batch_end(self, batch, logs=None):
-        tf.tidy(lambda: tf.keras.backend.clear_session())
+        tf.keras.backend.clear_session()
         gc.collect()
         # Dispose of any tensors that are no longer needed
         for tensor in tf.compat.v1.get_default_graph().get_operations():

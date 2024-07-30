@@ -120,8 +120,16 @@ def fit_model(
     # FITTING THE DATA 
     if verbose: print('Network compiled, fitting data now ... \n')
     if verbose: print('Creating the training and testing datasets ...')
-    train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(f'{model_filepath}/train_images/'), img_width, img_height, batch_size=32)
-    test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(f'{model_filepath}/test_images/'), img_width, img_height, batch_size=32)
+
+
+    train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
+    test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
+    train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
+    test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
+    # train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(f'{model_filepath}/train_images/'), img_width, img_height, batch_size=32)
+    # test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(f'{model_filepath}/test_images/'), img_width, img_height, batch_size=32)
+    train_dataset = create_dataset(os.path.normpath(train_labels_csv), os.path.normpath(train_image_dir), img_width, img_height, batch_size=32)
+    test_dataset = create_dataset(os.path.normpath(test_labels_csv), os.path.normpath(test_image_dir), img_width, img_height, batch_size=32)
 
     st = time.time() 
     # Fit the model using the datasets

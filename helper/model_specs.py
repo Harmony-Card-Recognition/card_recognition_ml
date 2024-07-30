@@ -1,6 +1,3 @@
-import os
-
-
 def pre_save_model_specs(
     specs_filepath: str = None,
     model_name: str = None,

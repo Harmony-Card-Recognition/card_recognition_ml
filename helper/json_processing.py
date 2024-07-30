@@ -3,16 +3,12 @@ import shutil
 import pandas as pd
 import requests
 import json
-import hashlib
 
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 from copy import deepcopy
 
 from helper.image_processing import random_edit_img
-from helper.helper import generate_unique_filename
-from sklearn.preprocessing import LabelEncoder
-
 
 def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
     """returns the train_images, test_images, train_labels, test_labels in that order"""

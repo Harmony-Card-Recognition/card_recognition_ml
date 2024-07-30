@@ -26,6 +26,6 @@ class ValidationAccuracyThresholdCallback(tf.keras.callbacks.Callback):
             self.model.stop_training = True
 
 class ClearMemory(tf.keras.callbacks.Callback):
-    def on_train_batch_end(self, batch, logs=None):
+    def on_epoch_end(self, batch, logs=None):
         tf.keras.backend.clear_session()
         gc.collect()

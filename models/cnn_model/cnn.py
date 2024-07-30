@@ -214,6 +214,14 @@ if __name__ == '__main__':
     # note: removing this would also probably result in a performance increase
     csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'csv_logs.csv'))  
 
+    # Define the ReduceLROnPlateau callback
+    reduce_lr = callbacks.ReduceLROnPlateau(
+        monitor='val_loss',  # Metric to monitor
+        factor=0.2,          # Factor by which the learning rate will be reduced
+        patience=5,          # Number of epochs with no improvement after which learning rate will be reduced
+        min_lr=0.00001       # Lower bound on the learning rate
+    )
+
     # =======================================
 
     if action == 0:
@@ -246,7 +254,7 @@ if __name__ == '__main__':
             model_filepath=model_filepath,
             img_width=img_width,
             img_height=img_height,
-            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
+            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback, reduce_lr],
             verbose=True,
             epochs=10000000000000,
         )

@@ -24,3 +24,4 @@ class ValidationAccuracyThresholdCallback(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if logs.get("val_accuracy") >= self.threshold:
             self.model.stop_training = True
+

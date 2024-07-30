@@ -13,7 +13,7 @@ from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precis
 from PIL import Image
 # from keras import callbacks, layers, models, optimizers, mixed_precision
 
-from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback
+from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback, ClearMemory
 from helper.image_processing import get_tensor_from_dir, get_img_dim
 from helper.helper import get_current_time, get_elapsed_time
 from helper.json_processing import format_json, get_datasets
@@ -223,12 +223,15 @@ if __name__ == '__main__':
     csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'training_logs.csv'))  
 
     # Define the ReduceLROnPlateau callback
-    reduce_lr = callbacks.ReduceLROnPlateau(
+    reduce_lr_callback = callbacks.ReduceLROnPlateau(
         monitor='val_loss',  # Metric to monitor
         factor=0.2,          # Factor by which the learning rate will be reduced
         patience=5,          # Number of epochs with no improvement after which learning rate will be reduced
         min_lr=0.00001       # Lower bound on the learning rate
     )
+
+    clear_memory_callback = ClearMemory()
+
 
     # =======================================
 
@@ -267,7 +270,7 @@ if __name__ == '__main__':
             model_filepath=model_filepath,
             img_width=img_width,
             img_height=img_height,
-            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback, reduce_lr],
+            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback, reduce_lr_callback, clear_memory_callback],
             verbose=True,
             epochs=10000000000000,
         )

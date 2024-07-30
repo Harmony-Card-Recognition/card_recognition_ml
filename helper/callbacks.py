@@ -1,5 +1,7 @@
 import csv
 import keras
+import tensorflow as tf
+import gc
 
 class CsvLoggerCallback(keras.callbacks.Callback):
     def __init__(self, filename):

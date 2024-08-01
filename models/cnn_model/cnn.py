@@ -191,7 +191,7 @@ if __name__ == '__main__':
     learning_rate = 0.0001
     beta_1 = 0.9
     beta_2 = 0.999
-    metrics = ['val_accuracy']
+    metrics = ['accuracy']
     loss = 'sparse_categorical_crossentropy'
 
     

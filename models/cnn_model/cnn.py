@@ -122,14 +122,14 @@ def fit_model(
     if verbose: print('Creating the training and testing datasets ...')
 
 
-    train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
-    test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
-    train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
-    test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
-    # train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(f'{model_filepath}/train_images/'), img_width, img_height, batch_size=32)
-    # test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(f'{model_filepath}/test_images/'), img_width, img_height, batch_size=32)
-    train_dataset = create_dataset(os.path.normpath(train_labels_csv), os.path.normpath(train_image_dir), img_width, img_height, batch_size=32)
-    test_dataset = create_dataset(os.path.normpath(test_labels_csv), os.path.normpath(test_image_dir), img_width, img_height, batch_size=32)
+    # train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
+    # test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
+    # train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
+    # test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
+    # train_dataset = create_dataset(os.path.normpath(train_labels_csv), os.path.normpath(train_image_dir), img_width, img_height, batch_size=32)
+    # test_dataset = create_dataset(os.path.normpath(test_labels_csv), os.path.normpath(test_image_dir), img_width, img_height, batch_size=32)
+    train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(f'{model_filepath}/train_images/'), img_width, img_height, batch_size=32)
+    test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(f'{model_filepath}/test_images/'), img_width, img_height, batch_size=32)
 
     st = time.time() 
     # Fit the model using the datasets
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     learning_rate = 0.0001
     beta_1 = 0.9
     beta_2 = 0.999
-    metrics = ['accuracy']
+    metrics = ['val_accuracy']
     loss = 'sparse_categorical_crossentropy'
 
     
@@ -241,18 +241,18 @@ if __name__ == '__main__':
         
         raw_json_filepath = os.path.join(data, '..', f'{large_json_name}.json')
 
-        # format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
-        # train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(
-        #     formatted_json_filepath, 
-        #     model_filepath
-        # )
+        format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
+        train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(
+            formatted_json_filepath, 
+            model_filepath
+        )
 
 
-        train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
-        test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
-        train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
-        test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
-        unique_classes = 993 
+        # train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
+        # test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
+        # train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
+        # test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
+        # unique_classes = 993 
 
         model = compile_model(
             unique_classes=unique_classes,
@@ -270,7 +270,7 @@ if __name__ == '__main__':
             model_filepath=model_filepath,
             img_width=img_width,
             img_height=img_height,
-            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback, reduce_lr_callback, clear_memory_callback],
+            callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
             verbose=True,
             epochs=10000000000000,
         )

@@ -24,6 +24,11 @@ def predict_folder(model_path, overall_json_path, img_folder_path):
         img_width = data[0]['img_width']
         img_height = data[0]['img_height']
 
+
+    # play with this to remove the need for the metadata file
+    # this gives the input layer size of the model
+    input_shape = model.layers[0].input_shape
+
     for i, image_name in enumerate(images):
         img_path = os.path.join(img_folder_path, image_name)
         img_tensor = get_tensor_from_dir(img_path, img_width=img_width, img_height=img_height)

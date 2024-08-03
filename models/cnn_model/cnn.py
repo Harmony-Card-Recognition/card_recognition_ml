@@ -202,10 +202,6 @@ if __name__ == '__main__':
         
     formatted_json_filepath = os.path.join(model_filepath, f'{large_json_name}({inital_json_grab}).json')
     
-    metadata_filepath = os.path.join(model_filepath, '.metadata.json') 
-    with open(metadata_filepath, 'w') as file:
-        json.dump([{'img_width': img_width, 'img_height': img_height}], file, indent=4)
-
     # =======================================
     # CALLBACKS
     # defines when the model will stop training

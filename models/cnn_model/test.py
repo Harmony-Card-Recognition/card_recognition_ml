@@ -18,16 +18,10 @@ def predict_folder(model_path, overall_json_path, img_folder_path):
     model = models.load_model(os.path.join(model_path, 'model.keras'))
     predictions = []
     images = [img for img in os.listdir(img_folder_path) if img.lower().endswith(('.png', '.jpg', '.jpeg'))]
-    # get the img_dimensions from the  
-    with open(os.path.join(model_path, '.metadata.json'), 'r') as file:
-        data = json.load(file)
-        img_width = data[0]['img_width']
-        img_height = data[0]['img_height']
-
-
+    
     # play with this to remove the need for the metadata file
     # this gives the input layer size of the model
-    input_shape = model.layers[0].input_shape
+    _, img_width, img_height, _ = model.input_shape
 
     for i, image_name in enumerate(images):
         img_path = os.path.join(img_folder_path, image_name)

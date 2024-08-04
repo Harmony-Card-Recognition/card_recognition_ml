@@ -3,21 +3,16 @@ PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.append(PROJ_PATH)
 
 
-import json
 import argparse
+import datetime
 
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision # type: ignore
 
-from PIL import Image
-# from keras import callbacks, layers, models, optimizers, mixed_precision
-
 from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback, ClearMemory
-from helper.image_processing import get_tensor_from_dir, get_img_dim
-from helper.helper import get_current_time, get_elapsed_time
 from helper.json_processing import format_json, get_datasets
-from helper.model_specs import pre_save_model_specs, post_save_model_specs
+from helper.model_specs import pre_save_model_specs
 
-from cnn import compile_model, fit_model, create_dataset
+from cnn import compile_model, fit_model
 
 
 def compile_argument_parser():
@@ -205,7 +200,7 @@ def get_callbacks(model_filepath: str):
 if __name__ == "__main__":
     # defaults that will rarely change
     image_size = 'large'
-    inital_json_grab =  3# -1 to get all of the objects in the json
+    inital_json_grab =  -1 # -1 to get all of the objects in the json
     img_width, img_height = 450, 650 
     learning_rate = 0.0001
     beta_1 = 0.9
@@ -215,11 +210,14 @@ if __name__ == "__main__":
     
     args = compile_argument_parser()
 
-    model_name = args.cardset.upper()[:-4] + '_' + args.version
+    if args.version: version = args.version
+    else: version = version = datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S")
+
+    model_name = args.cardset.upper()[:-4] + '_' + version
     large_json_name = 'deckdrafterprod.' + args.cardset
 
     # this is where the models and data are being stored
-    data = os.path.join(PROJ_PATH, '.data/cnn', args.cardset)
+    data = os.path.join(PROJ_PATH, '.data', 'cnn', args.cardset)
     model_filepath = os.path.join(data, model_name)
     if not os.path.exists(model_filepath):
         os.makedirs(model_filepath)

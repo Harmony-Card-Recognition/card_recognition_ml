@@ -1,3 +1,5 @@
+import json
+
 def pre_save_model_specs(
     specs_filepath: str = None,
     model_name: str = None,
@@ -12,30 +14,41 @@ def pre_save_model_specs(
     img_width: int = None, # this is what the model expects for the input layer 
     img_height: int = None, # this is what the model expects for the input layer
 ) -> None:
+    specs = {
+        "model_name": model_name,
+        "image_size": image_size,
+        "initial_json_grab": inital_json_grab,
+        "unique_classes": unique_classes,
+        "learning_rate": learning_rate,
+        "beta_1": beta_1,
+        "beta_2": beta_2,
+        "loss": loss,
+        "metrics": metrics,
+        "preprocessed_image_dimensions": f"{img_width}x{img_height}"
+    }
+
     with open(specs_filepath, 'w') as f:
-        f.write(f'Model Name: {model_name}\n')
-        f.write(f'Image Size: {image_size}\n')
-        f.write(f'Initial JSON Grab: {inital_json_grab}\n')
-        f.write(f'Unique Classes: {unique_classes}\n')
-        f.write('\n')
-        f.write(f'Learning Rate: {learning_rate}\n')
-        f.write(f'Beta 1: {beta_1}\n') 
-        f.write(f'Beta 2: {beta_2}\n') 
-        f.write(f'Loss: {loss}\n') 
-        f.write(f'metrics: {metrics}\n')
-        f.write(f'Preprocessed Image Dimensions (wxh): {img_width}x{img_height}')
-        f.write('\n')
+        json.dump(specs, f, indent=4)
 
 def post_save_model_specs(
     specs_filepath: str = None,
     training_time: str = None, # I am probably wrong about this datatype but whatever
     loss: float = None,
     accuracy: float = None,
-    model = None, # the datatype isn;t important, but it is probably helpful
+    model = None, # the datatype isn’t important, but it is probably helpful
 ) -> None:
-    with open(specs_filepath, 'a') as f:
-        f.write(f'Training Time: {training_time}\n')
-        f.write(f'Loss: {loss}\n')
-        f.write(f'Accuracy: {accuracy}\n')
-        f.write('\n')
-        model.summary(print_fn=lambda x: f.write(x + '\n'))
+    # Read the existing specs from the JSON file
+    with open(specs_filepath, 'r') as f:
+        specs = json.load(f)
+
+    # Update the specs with new attributes
+    specs.update({
+        "training_time": training_time,
+        "final_loss": loss,
+        "final_accuracy": accuracy,
+        "model_summary": str(model.summary()) if model else None
+    })
+
+    # Write the updated specs back to the JSON file
+    with open(specs_filepath, 'w') as f:
+        json.dump(specs, f, indent=4)

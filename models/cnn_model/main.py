@@ -258,7 +258,7 @@ if __name__ == "__main__":
         print(f'Expanding the current model to hold more classes')
         expand_existing_model()
 
-    print('yay, you did something and the main script executed')
+    print(f'Version: {version}')
     
 
     

@@ -194,7 +194,7 @@ def get_callbacks(model_filepath: str):
 
     clear_memory_callback = ClearMemory()
 
-    return [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback, reduce_lr_callback, clear_memory_callback] 
+    return [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback] 
 
 
 if __name__ == "__main__":

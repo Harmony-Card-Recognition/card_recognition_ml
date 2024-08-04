@@ -267,25 +267,3 @@ if __name__ == "__main__":
         
 
 
-    # =======================================
-
-    # elif action == 1:
-    #     print('CONTINUING TRAINING ON EXSISTING MODEL') 
-    #     # this takes in the last checkpoint
-    #     # if the model crashed, then there is no 'final' model to start training again
-    #     # if you did want to load this based on the final model from the previous training session, use the following
-    #     # os.path.join(model_filepath, 'model.keras')
-    #     model = models.load_model(checkpoint_filepath)
-
-    #     train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(formatted_json_filepath, model_filepath)
-
-    #     # start the training process for the model 
-    #     model = fit_model(
-    #         model=model,
-    #         model_filepath=model_filepath,
-    #         img_width=img_width,
-    #         img_height=img_height,
-    #         callbacks=[accuracy_threshold_callback, checkpoint_callback, csv_logger_callback],
-    #         verbose=True,
-    #         epochs=10000000000000,
-    #     )

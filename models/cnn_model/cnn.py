@@ -54,27 +54,22 @@ def compile_model(
 
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
     model.add(layers.Conv2D(64, (3, 3)))
-    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(128, (3, 3)))
-    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(256, (3, 3)))
-    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(256, (3, 3)))
-    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     model.add(layers.Conv2D(512, (3, 3)))
-    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 

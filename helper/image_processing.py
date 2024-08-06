@@ -7,6 +7,7 @@ from typing import Tuple
 from PIL import Image, ImageFilter, ImageEnhance
 from io import BytesIO
 
+
 def zoom_rotate_img(image):
     """Help: Randomly rotate and zoom the given PIL image degrees and return it"""
 
@@ -73,14 +74,15 @@ def adjust_sharpness(image):
 # =====================================================
 
 
-def random_edit_img_old(image: Image.Image, distort: bool = True, verbose: bool = False) -> Image.Image:
+def random_edit_img_old(
+    image: Image.Image, distort: bool = True, verbose: bool = False
+) -> Image.Image:
     """Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
     the image if need be."""
 
     # convert image to RGB if it's not already
     if image.mode != "RGB":
         image = image.convert("RGB")
-        
 
     if distort:
         # randomly choose which editing operations to perform
@@ -112,20 +114,26 @@ def random_edit_img_old(image: Image.Image, distort: bool = True, verbose: bool 
 
 # =====================================================
 
-def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = False) -> Image.Image:
+
+def random_edit_img(
+    image: Image.Image, distort: bool = True, verbose: bool = False
+) -> Image.Image:
     """Help: Make poor edits to the image at random and return the finished copy. Can optionally not distort
     the image if need be, using TensorFlow for GPU acceleration where possible."""
 
     # always skew the image
     image = zoom_rotate_img(image)
-    if verbose: print("Image skewed (Note: Skew operation needs custom implementation)")
+    if verbose:
+        print("Image skewed (Note: Skew operation needs custom implementation)")
 
     # Convert image to TensorFlow tensor
-    tensor = get_tensor_from_image(image=image, img_width=image.width, img_height=image.height) 
+    tensor = get_tensor_from_image(
+        image=image, img_width=image.width, img_height=image.height
+    )
 
     if distort:
         edit_permission = np.random.choice(a=[False, True], size=(6))
-        
+
         if edit_permission[0]:
             tensor = tf.image.random_brightness(tensor, max_delta=0.1)
             if verbose:
@@ -139,7 +147,7 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
             if verbose:
                 print("Image color saturation adjusted")
         if edit_permission[3]:
-            tensor = tf.image.random_hue(tensor, max_delta=0.04)  
+            tensor = tf.image.random_hue(tensor, max_delta=0.04)
             if verbose:
                 print("Image hue adjusted")
         if edit_permission[4]:
@@ -149,17 +157,19 @@ def random_edit_img(image: Image.Image, distort: bool = True, verbose: bool = Fa
                 print(f"Image gamma adjusted with gamma={gamma}")
         if edit_permission[5]:
             quality = np.random.randint(70, 101)
-            image_bytes = tf.image.encode_jpeg(tf.cast(tensor* 255, tf.uint8), quality=quality)
+            image_bytes = tf.image.encode_jpeg(
+                tf.cast(tensor * 255, tf.uint8), quality=quality
+            )
             tensor = tf.cast(tf.image.decode_jpeg(image_bytes), tf.float32) / 255.0
             if verbose:
                 print(f"JPEG quality adjusted with quality={quality}")
-
 
     tensor = tf.image.convert_image_dtype(tensor, dtype=tf.float32)
     tensor_uint8 = tf.cast(tensor * 255, tf.uint8)
     image_array = tensor_uint8.numpy()
     image = Image.fromarray(image_array)
     return image
+
 
 # =====================================================
 
@@ -169,17 +179,22 @@ def preprocess_tensor(image: tf.Tensor, img_width: int, img_height: int) -> tf.T
     img = img / 255.0
     return img
 
+
 def get_tensor_from_dir(image_path: str, img_width: int, img_height: int) -> tf.Tensor:
     img = tf.io.read_file(image_path)
     img = tf.image.decode_jpeg(img, channels=3)
     img = preprocess_tensor(image=img, img_width=img_width, img_height=img_height)
     return img
 
-def get_tensor_from_image(image: Image.Image, img_width: int, img_height: int) -> tf.Tensor:
+
+def get_tensor_from_image(
+    image: Image.Image, img_width: int, img_height: int
+) -> tf.Tensor:
     image_array = np.array(image)
     img = tf.convert_to_tensor(image_array, dtype=tf.float32)
-    img = preprocess_tensor(image=img, img_width=img_width, img_height=img_height) 
-    return img  
+    img = preprocess_tensor(image=img, img_width=img_width, img_height=img_height)
+    return img
+
 
 def get_image_from_uri(image_uri: str) -> Image.Image:
     response = requests.get(image_uri)
@@ -187,14 +202,14 @@ def get_image_from_uri(image_uri: str) -> Image.Image:
     image = Image.open(BytesIO(image_data))
     return image
 
+
 # NOTE: this is useless now
 def get_img_dim(image_size: str) -> Tuple[int, int]:
-    if image_size == 'small':
+    if image_size == "small":
         width, height = 146, 204
-    elif image_size == 'normal':
+    elif image_size == "normal":
         width, height = 488, 680
-    elif image_size == 'large':
+    elif image_size == "large":
         width, height = 672, 936
         # width, height = 313, 437
     return width, height
-

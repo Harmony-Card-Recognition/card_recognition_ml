@@ -65,6 +65,35 @@ def compile_argument_parser():
 
     return args
 
+def get_callbacks(model_filepath: str): 
+    # defines when the model will stop training
+    accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.98)
+
+    # saves a snapshot of the model while it is training
+    # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
+    checkpoint_filepath = os.path.join(model_filepath, 'checkpoint.keras')
+    checkpoint_callback = callbacks.ModelCheckpoint(
+        filepath=checkpoint_filepath,
+        save_weights_only=False,
+        save_best_only=False
+    )
+
+    # logs the epoch, accuracy, and loss for a training session
+    # note: removing this would also probably result in a performance increase
+    csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'training_logs.csv'))  
+
+    # Define the ReduceLROnPlateau callback
+    reduce_lr_callback = callbacks.ReduceLROnPlateau(
+        monitor='val_loss',  # Metric to monitor
+        factor=0.2,          # Factor by which the learning rate will be reduced
+        patience=5,          # Number of epochs with no improvement after which learning rate will be reduced
+        min_lr=0.00001       # Lower bound on the learning rate
+    )
+
+    clear_memory_callback = ClearMemory()
+
+    return [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback] 
+# different actions one can take
 def create_new_model(
         learning_rate,
         beta_1,
@@ -139,6 +168,13 @@ def retrain_existing_model(
     ):
     # adds to the current dataset (without adding new classifications)
     # keeps the current model
+    add_new_data(
+        train_labels_filepath=train_labels_filepath, 
+        test_labels_filepath=test_labels_filepath, 
+        train_images_filepath=train_images_filepath, 
+        test_images_filepath=test_images_filepath,
+        verbose=verbose,
+    )
 
     # this is for when a client uses the model and gets new labled data
     # might as well capitalize on this and continue to train the model and make it better
@@ -167,34 +203,22 @@ def expand_existing_model():
     # you should also only do this periodically
     pass
 
-def get_callbacks(model_filepath: str): 
-    # defines when the model will stop training
-    accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.98)
+# useable functions
+def add_new_data(
+        train_labels_filepath, 
+        test_labels_filepath, 
+        train_images_filepath, 
+        test_images_filepath,
+        verbose: bool = True,
+):
+    # this is when you have labeled data that you want to retrain the model on
+    # augment the images 
+    # add them to the testing and training image folders
+    # append the according labels to the .csv files
+    # you are finished
+    pass
 
-    # saves a snapshot of the model while it is training
-    # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
-    checkpoint_filepath = os.path.join(model_filepath, 'checkpoint.keras')
-    checkpoint_callback = callbacks.ModelCheckpoint(
-        filepath=checkpoint_filepath,
-        save_weights_only=False,
-        save_best_only=False
-    )
 
-    # logs the epoch, accuracy, and loss for a training session
-    # note: removing this would also probably result in a performance increase
-    csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'training_logs.csv'))  
-
-    # Define the ReduceLROnPlateau callback
-    reduce_lr_callback = callbacks.ReduceLROnPlateau(
-        monitor='val_loss',  # Metric to monitor
-        factor=0.2,          # Factor by which the learning rate will be reduced
-        patience=5,          # Number of epochs with no improvement after which learning rate will be reduced
-        min_lr=0.00001       # Lower bound on the learning rate
-    )
-
-    clear_memory_callback = ClearMemory()
-
-    return [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback] 
 
 
 if __name__ == "__main__":

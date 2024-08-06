@@ -1,6 +1,7 @@
 import json
 import os
 
+
 def pre_save_model_specs(
     model_filepath: str = None,
     model_name: str = None,
@@ -12,8 +13,8 @@ def pre_save_model_specs(
     beta_2: float = None,
     loss: str = None,
     metrics: list[str] = None,
-    img_width: int = None, # this is what the model expects for the input layer 
-    img_height: int = None, # this is what the model expects for the input layer
+    img_width: int = None,  # this is what the model expects for the input layer
+    img_height: int = None,  # this is what the model expects for the input layer
 ) -> None:
     specs = {
         "model_name": model_name,
@@ -25,32 +26,35 @@ def pre_save_model_specs(
         "beta_2": beta_2,
         "loss": loss,
         "metrics": metrics,
-        "preprocessed_image_dimensions": f"{img_width}x{img_height}"
+        "preprocessed_image_dimensions": f"{img_width}x{img_height}",
     }
 
-    specs_filepath = os.path.join(model_filepath, 'specs.json')
-    with open(specs_filepath, 'w') as f:
+    specs_filepath = os.path.join(model_filepath, "specs.json")
+    with open(specs_filepath, "w") as f:
         json.dump(specs, f, indent=4)
+
 
 def post_save_model_specs(
     specs_filepath: str = None,
-    training_time: str = None, # I am probably wrong about this datatype but whatever
+    training_time: str = None,  # I am probably wrong about this datatype but whatever
     loss: float = None,
     accuracy: float = None,
-    model = None, # the datatype isn’t important, but it is probably helpful
+    model=None,  # the datatype isn’t important, but it is probably helpful
 ) -> None:
     # Read the existing specs from the JSON file
-    with open(specs_filepath, 'r') as f:
+    with open(specs_filepath, "r") as f:
         specs = json.load(f)
 
     # Update the specs with new attributes
-    specs.update({
-        "training_time": training_time,
-        "final_loss": loss,
-        "final_accuracy": accuracy,
-        "model_summary": str(model.summary()) if model else None
-    })
+    specs.update(
+        {
+            "training_time": training_time,
+            "final_loss": loss,
+            "final_accuracy": accuracy,
+            "model_summary": str(model.summary()) if model else None,
+        }
+    )
 
     # Write the updated specs back to the JSON file
-    with open(specs_filepath, 'w') as f:
+    with open(specs_filepath, "w") as f:
         json.dump(specs, f, indent=4)

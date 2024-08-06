@@ -14,9 +14,8 @@ from PIL import Image
 # from keras import callbacks, layers, models, optimizers, mixed_precision
 
 from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback, ClearMemory
-from helper.image_processing import get_tensor_from_dir, get_img_dim
+from helper.image_processing import get_tensor_from_dir
 from helper.helper import get_current_time, get_elapsed_time
-from helper.json_processing import format_json, get_datasets
 from helper.model_specs import pre_save_model_specs, post_save_model_specs
 
 def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
@@ -91,22 +90,6 @@ def compile_model(
     # Compile the model
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
 
-    # # save some specs of the model that is being trained
-    # specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
-    # pre_save_model_specs(
-    #     specs_filepath=specs_filepath,
-    #     model_name=model_name,
-    #     image_size=image_size,
-    #     inital_json_grab=inital_json_grab,
-    #     unique_classes=unique_classes,
-    #     learning_rate=learning_rate,
-    #     beta_1=beta_1,
-    #     beta_2=beta_2,
-    #     metrics=metrics,
-    #     loss=loss,
-    #     img_width=img_width,
-    #     img_height=img_height,
-    # )
     return model
 
 def fit_model(
@@ -114,23 +97,21 @@ def fit_model(
     model_filepath,
     img_width, 
     img_height, 
+    train_labels_filepath, 
+    test_labels_filepath, 
+    train_images_filepath, 
+    test_images_filepath,
     callbacks,
     verbose=True,
+    batch_size=32,
     epochs=1000,
 ):
     # FITTING THE DATA 
     if verbose: print('Network compiled, fitting data now ... \n')
     if verbose: print('Creating the training and testing datasets ...')
 
-
-    # train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
-    # test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
-    # train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
-    # test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
-    # train_dataset = create_dataset(os.path.normpath(train_labels_csv), os.path.normpath(train_image_dir), img_width, img_height, batch_size=32)
-    # test_dataset = create_dataset(os.path.normpath(test_labels_csv), os.path.normpath(test_image_dir), img_width, img_height, batch_size=32)
-    train_dataset = create_dataset(os.path.normpath(f'{model_filepath}/train_labels.csv'), os.path.normpath(f'{model_filepath}/train_images/'), img_width, img_height, batch_size=32)
-    test_dataset = create_dataset(os.path.normpath(f'{model_filepath}/test_labels.csv'), os.path.normpath(f'{model_filepath}/test_images/'), img_width, img_height, batch_size=32)
+    train_dataset = create_dataset(train_labels_filepath, train_images_filepath, img_width, img_height, batch_size=batch_size)
+    test_dataset = create_dataset(test_labels_filepath, test_images_filepath, img_width, img_height, batch_size=batch_size)
 
     st = time.time() 
     # Fit the model using the datasets

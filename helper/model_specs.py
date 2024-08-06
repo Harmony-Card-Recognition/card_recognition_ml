@@ -1,7 +1,8 @@
 import json
+import os
 
 def pre_save_model_specs(
-    specs_filepath: str = None,
+    model_filepath: str = None,
     model_name: str = None,
     image_size: str = None,
     inital_json_grab: int = None,
@@ -27,6 +28,7 @@ def pre_save_model_specs(
         "preprocessed_image_dimensions": f"{img_width}x{img_height}"
     }
 
+    specs_filepath = os.path.join(model_filepath, 'specs.json')
     with open(specs_filepath, 'w') as f:
         json.dump(specs, f, indent=4)
 

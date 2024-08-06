@@ -9,7 +9,7 @@ import datetime
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision # type: ignore
 
 from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback, ClearMemory
-from helper.json_processing import format_json, get_datasets
+from helper.json_processing import format_json, populate_images_and_labels
 from helper.model_specs import pre_save_model_specs
 
 from cnn import compile_model, fit_model
@@ -72,33 +72,21 @@ def create_new_model(
         metrics,
         loss,
         model_filepath,
+        train_labels_filepath, 
+        test_labels_filepath, 
+        train_images_filepath, 
+        test_images_filepath,
         img_width,
         img_height,
+        unique_classes,
         callbacks,
         verbose,
         epochs,
     ):
 
-    # NOTE THIS IS SOMETHING THAT YOU ARE PROBABLY GOING TO CHANGE LATER ON...
-    data = os.path.join(PROJ_PATH, '.data/cnn', args.cardset)
-    raw_json_filepath = os.path.join(data, '..', '..', f'{large_json_name}.json')
-
-    format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
-    train_image_dir, test_image_dir, train_labels_csv, test_labels_csv, unique_classes = get_datasets(
-        formatted_json_filepath, 
-        model_filepath
-    )
-
-    # train_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'train_images')
-    # test_image_dir = os.path.join(model_filepath, '..', 'lorcana_images', 'test_images')
-    # train_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'train_labels.csv')
-    # test_labels_csv = os.path.join(model_filepath, '..', 'lorcana_images', 'test_labels.csv')
-    # unique_classes = 993 
-
     # save some specs of the model that is being trained
-    specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
     pre_save_model_specs(
-        specs_filepath=specs_filepath,
+        model_filepath=model_filepath,
         model_name=model_name,
         image_size=image_size,
         inital_json_grab=inital_json_grab,
@@ -127,7 +115,11 @@ def create_new_model(
         model=model,
         model_filepath=model_filepath,
         img_width=img_width,
-        img_height=img_height,
+        img_height=img_height, 
+        train_labels_filepath=train_labels_filepath, 
+        test_labels_filepath=test_labels_filepath, 
+        train_images_filepath=train_images_filepath, 
+        test_images_filepath=test_images_filepath,
         callbacks=callbacks,
         verbose=verbose,
         epochs=epochs,
@@ -135,6 +127,10 @@ def create_new_model(
  
 def retrain_existing_model(
         model_filepath,
+        train_labels_filepath, 
+        test_labels_filepath, 
+        train_images_filepath, 
+        test_images_filepath,
         img_width,
         img_height,
         callbacks,
@@ -151,6 +147,10 @@ def retrain_existing_model(
         model_filepath=model_filepath,
         img_width=img_width,
         img_height=img_height,
+        train_labels_filepath=train_labels_filepath, 
+        test_labels_filepath=test_labels_filepath, 
+        train_images_filepath=train_images_filepath, 
+        test_images_filepath=test_images_filepath,
         callbacks=callbacks,
         verbose=verbose,
         epochs=epochs,
@@ -173,7 +173,7 @@ def get_callbacks(model_filepath: str):
 
     # saves a snapshot of the model while it is training
     # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
-    checkpoint_filepath = os.path.join(model_filepath, 'model_checkpoint.keras')
+    checkpoint_filepath = os.path.join(model_filepath, 'checkpoint.keras')
     checkpoint_callback = callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
         save_weights_only=False,
@@ -198,37 +198,69 @@ def get_callbacks(model_filepath: str):
 
 
 if __name__ == "__main__":
-    # defaults that will rarely change
+    # ===========================================
+    # defines parameters (both defaults that don't change, and variables and flags)
+    # defaults
     image_size = 'large'
-    inital_json_grab =  -1 # -1 to get all of the objects in the json
-    img_width, img_height = 450, 650 
+    inital_json_grab =  3 # -1 to get all of the objects in the json
+    img_width, img_height = 100, 100 # 450, 650 
     learning_rate = 0.0001
     beta_1 = 0.9
     beta_2 = 0.999
     metrics = ['accuracy']
     loss = 'sparse_categorical_crossentropy'
     
+    # flags
     args = compile_argument_parser()
 
+    # ===========================================
+    # define names and filepaths
+    # NAMES
     if args.version: version = args.version
     else: version = version = datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S")
+    print(f'Model Version: {version}')
 
     model_name = args.cardset.upper()[:-4] + '_' + version
+
     large_json_name = 'deckdrafterprod.' + args.cardset
+    
+    # FILEPATHS
+    data = os.path.join(PROJ_PATH, '.data', 'cnn', args.cardset)
 
     # this is where the models and data are being stored
-    data = os.path.join(PROJ_PATH, '.data', 'cnn', args.cardset)
     model_filepath = os.path.join(data, model_name)
-    if not os.path.exists(model_filepath):
-        os.makedirs(model_filepath)
+    if not os.path.exists(model_filepath): os.makedirs(model_filepath)
 
-    formatted_json_filepath = os.path.join(model_filepath, f'{large_json_name}({inital_json_grab}).json')
+    # the dataset filepath holds the training/testing images and labels, as well as the formatted json filepath
+    dataset_filepath= os.path.join(data, 'dataset')
+    if not os.path.exists(dataset_filepath): os.makedirs(dataset_filepath)
 
+    train_images_filepath = os.path.join(dataset_filepath, 'train_images')
+    test_images_filepath = os.path.join(dataset_filepath, 'test_images')
+    train_labels_filepath = os.path.join(dataset_filepath, 'train_labels.csv')
+    test_labels_filepath = os.path.join(dataset_filepath, 'test_labels.csv')
+    formatted_json_filepath = os.path.join(dataset_filepath, f'{large_json_name}({inital_json_grab}).json')
+
+    raw_json_filepath = os.path.join(data, '..', '..', f'{large_json_name}.json')
+
+    # ===========================================
+    # callbacks for fitting the model
     callbacks = get_callbacks(model_filepath=model_filepath)
 
-    if args.verbose:
-        print('Verbose mode enabled')
+    # ===========================================
+    # populates the smaller json with the nessicary information
+    format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
 
+    # populate the training and testing directories
+    unique_classes = populate_images_and_labels(
+        formatted_json_filepath=formatted_json_filepath, 
+        train_labels_filepath=train_labels_filepath, 
+        test_labels_filepath=test_labels_filepath, 
+        train_images_filepath=train_images_filepath, 
+        test_images_filepath=test_images_filepath,
+    )
+
+    # ===========================================
     if args.create: 
         print(f'Creating a new model from scratch')
         create_new_model(
@@ -238,8 +270,13 @@ if __name__ == "__main__":
             metrics=metrics,
             loss=loss,
             model_filepath=model_filepath,
+            train_labels_filepath=train_labels_filepath, 
+            test_labels_filepath=test_labels_filepath, 
+            train_images_filepath=train_images_filepath, 
+            test_images_filepath=test_images_filepath,
             img_width=img_width,
             img_height=img_height,
+            unique_classes=unique_classes,
             callbacks=callbacks,
             verbose=args.verbose,
             epochs=10000000000000,
@@ -248,6 +285,10 @@ if __name__ == "__main__":
         print(f'Continuing to train a prexsisting model')
         retrain_existing_model(
             model_filepath=model_filepath,
+            train_labels_filepath=train_labels_filepath, 
+            test_labels_filepath=test_labels_filepath, 
+            train_images_filepath=train_images_filepath, 
+            test_images_filepath=test_images_filepath,
             img_width=img_width,
             img_height=img_height,
             callbacks=callbacks,
@@ -258,7 +299,7 @@ if __name__ == "__main__":
         print(f'Expanding the current model to hold more classes')
         expand_existing_model()
 
-    print(f'Version: {version}')
+    print(f'Model Version: {version}')
     
 
     

@@ -1,5 +1,5 @@
 ## NOT A FINISHED PROJECT
-
+python main.py --create -c LorcanaCard --verbose
 
 # Packages to Install
 ### NOTE: first activate the venv so that you are installing the packages there and not the host machine 

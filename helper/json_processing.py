@@ -11,10 +11,18 @@ from copy import deepcopy
 from helper.image_processing import random_edit_img
 from helper.helper import generate_unique_filename
 
-def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
+def populate_images_and_labels(
+        formatted_json_filepath:str, 
+        # model_filepath:str, 
+        train_labels_filepath:str, 
+        test_labels_filepath:str, 
+        train_images_filepath:str, 
+        test_images_filepath:str,
+        verbose:bool=True
+    ):
     """returns the train_images, test_images, train_labels, test_labels in that order"""
     # Load the JSON file into a DataFrame
-    df = pd.read_json(json_filepath)
+    df = pd.read_json(formatted_json_filepath)
 
     column_names = ['label', 'filename', "_id"]
 
@@ -30,15 +38,16 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
 
     # Create directories to store the training and testing images
     if verbose: print('Creating image directories ...')
-    train_image_dir = os.path.join(model_filepath, 'train_images')
-    test_image_dir = os.path.join(model_filepath, 'test_images')
-    os.makedirs(train_image_dir, exist_ok=True)
-    os.makedirs(test_image_dir, exist_ok=True)
+    os.makedirs(train_images_filepath, exist_ok=True)
+    os.makedirs(test_images_filepath, exist_ok=True)
 
     # Download the images and save them to files
     if verbose: print('Populating images ...')
     json_length = len(df)
 
+
+    # when retraining the model, and there are more classes, you will need to change this
+    # the unique index should reflect the last value in the csv -1 or something
     unique_index = -1  # I want this to start at 0, but the first thing the for loop does is add something, so this basically changes to 0
     previous_id = None
     for i, row in df.iterrows():
@@ -68,8 +77,8 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
         for j in range(15):
             distorted_img = random_edit_img(img)
             # distorted_img_path = os.path.join(train_image_dir, f'{i}_distorted({j}).png')
-            distorted_img_filename = generate_unique_filename(train_image_dir, f'{i}_distorted', 'png') 
-            distorted_img_path = os.path.join(train_image_dir, distorted_img_filename)
+            distorted_img_filename = generate_unique_filename(train_images_filepath, f'{i}_distorted', 'png') 
+            distorted_img_path = os.path.join(train_images_filepath, distorted_img_filename)
             distorted_img.save(distorted_img_path)
 
             training_labels.append(unique_index)
@@ -78,7 +87,7 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
 
 
         # Save the original image to a file, using the index as the filename
-        img_path = os.path.join(test_image_dir, f'{i}.png')
+        img_path = os.path.join(test_images_filepath, f'{i}.png')
         img.save(img_path)
 
         # Add the label to the training labels list
@@ -89,22 +98,14 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
         for j in range(2):
             distorted_img = random_edit_img(img)
             # distorted_img_path = os.path.join(test_image_dir, f'{i}_distorted({j}).png')
-            distorted_img_filename = generate_unique_filename(test_image_dir, f'{i}_distorted', 'png') 
-            distorted_img_path = os.path.join(test_image_dir, distorted_img_filename)
+            distorted_img_filename = generate_unique_filename(test_images_filepath, f'{i}_distorted', 'png') 
+            distorted_img_path = os.path.join(test_images_filepath, distorted_img_filename)
             distorted_img.save(distorted_img_path)
 
             testing_labels.append(unique_index)
             testing_csv_filenames.append(distorted_img_filename)
             testing_csv_ids.append(f'{row["_id"]}')
 
-        # create a dataset for testing (or validation)
-        # for i in range(1):
-        #     distorted_img = random_edit_img(img)
-        #     distorted_img_path = os.path.join(test_image_dir, f'{index}_distorted({i}).png')
-        #     distorted_img.save(distorted_img_path)
-        #     testing_labels.append(index)
-
-        
     
     # Save the labels to CSV files
     if verbose: print('Saving labels as CSV ...')
@@ -115,15 +116,15 @@ def get_datasets(json_filepath:str, model_filepath:str, verbose:bool=True):
     train_labels_df = pd.DataFrame(data)
 
     # test_labels_df = pd.DataFrame(testing_csv_filenames, columns=['label'])
-    train_labels_df.to_csv(os.path.join(model_filepath, 'train_labels.csv'), index=False)
-    test_labels_df.to_csv(os.path.join(model_filepath, 'test_labels.csv'), index=False)
+    train_labels_df.to_csv(train_labels_filepath, index=False)
+    test_labels_df.to_csv(test_labels_filepath, index=False)
 
     if verbose: print('Finished creating the datasets!')
 
     print(f'\nUNIQUE CLASSES: {unique_index + 1}')
 
-        # The function now returns the paths to the image directories and the labels CSV files
-    return train_image_dir, test_image_dir, os.path.join(model_filepath, 'train_labels.csv'), os.path.join(model_filepath, 'test_labels.csv'), unique_index+1
+    # The function now returns the paths to the image directories and the labels CSV files
+    return unique_index+1
 
 # ==================================================
 # HELPERS

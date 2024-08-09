@@ -1,3 +1,8 @@
+import os, sys
+PROJ_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), "..", ".."))
+sys.path.append(PROJ_PATH)
+
 from filepaths import get_filepaths
 from cnn import compile_model, fit_model
 from helper.model_specs import pre_save_model_specs
@@ -15,12 +20,6 @@ from helper.callbacks import (
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
 import datetime
 import argparse
-import os
-import sys
-
-PROJ_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), "..", ".."))
-sys.path.append(PROJ_PATH)
 
 
 # from helper.data import populate_images_and_labels

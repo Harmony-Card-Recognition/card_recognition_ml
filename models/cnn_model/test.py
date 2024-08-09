@@ -1,3 +1,8 @@
+import os, sys
+PROJ_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', '..'))
+sys.path.append(PROJ_PATH)
+
 from helper.image_processing import get_tensor_from_image, get_tensor_from_dir
 from helper.helper import get_elapsed_time
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
@@ -5,11 +10,6 @@ import numpy as np
 import json
 import pandas as pd
 import time
-import os
-import sys
-PROJ_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', '..'))
-sys.path.append(PROJ_PATH)
 
 
 def predict_folder(model_path, overall_json_path, img_folder_path):

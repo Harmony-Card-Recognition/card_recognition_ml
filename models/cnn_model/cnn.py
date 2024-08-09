@@ -1,3 +1,8 @@
+import os, sys
+PROJ_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', '..'))
+sys.path.append(PROJ_PATH)
+
 from helper.model_specs import post_save_model_specs
 import time
 from helper.helper import get_current_time, get_elapsed_time
@@ -5,11 +10,6 @@ from helper.image_processing import get_tensor_from_dir
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
 import tensorflow as tf
 import pandas as pd
-import os
-import sys
-PROJ_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', '..'))
-sys.path.append(PROJ_PATH)
 
 
 def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):

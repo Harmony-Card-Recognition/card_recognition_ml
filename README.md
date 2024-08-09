@@ -4,7 +4,7 @@ python main.py --create -c LorcanaCard --verbose
 # Packages to Install
 ### NOTE: first activate the venv so that you are installing the packages there and not the host machine 
     DEPRECIATED: pip install scikit-learn opencv-python keras numpy pandas Pillow requests tensorflow matplotlib tensorflow_probability tensorrt tensorflow-probability[tf]
-    pip install tensorflow[and-cuda] numpy pandas requests Pillow scikit-learn 
+    pip install tensorflow[and-cuda] numpy pandas requests Pillow scikit-learn bidict 
 
 
 # Virtual Environment 

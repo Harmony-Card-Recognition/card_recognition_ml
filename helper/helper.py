@@ -1,5 +1,6 @@
 import os
 from time import localtime, strftime, time
+import hashlib
 
 
 # =======================================
@@ -28,3 +29,14 @@ def generate_unique_filename(directory, base_name, extension):
         if not os.path.exists(os.path.join(directory, filename)):
             return filename
         counter += 1
+
+
+# =======================================
+# LABELS
+def alphanumeric_to_int(alp_num_str: str):
+    try:
+        result = int(hashlib.sha256(alp_num_str.encode()).hexdigest(), 16) % 10**8
+    except ValueError:
+        raise ValueError("Invalid alphanumeric string provided.")
+    
+    return result

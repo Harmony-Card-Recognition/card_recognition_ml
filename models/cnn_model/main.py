@@ -1,118 +1,120 @@
 import os, sys
-PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.append(PROJ_PATH)
 
 
 import argparse
 import datetime
 
-from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision # type: ignore
+from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
 
-from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback, ClearMemory
-from helper.json_processing import format_json, populate_images_and_labels
+from helper.callbacks import (
+    CsvLoggerCallback,
+    ValidationAccuracyThresholdCallback,
+    ClearMemory,
+)
+from helper.json_processing import format_json
+
+# from helper.data import populate_images_and_labels
+from helper.new_data import (
+    original_from_formatted_json,
+    create_datafolders_from_original,
+)
 from helper.model_specs import pre_save_model_specs
 
 from cnn import compile_model, fit_model
-
+from filepaths import get_filepaths
 
 def compile_argument_parser():
-    parser = argparse.ArgumentParser(description = 'Creates CNN Models for Card Games', add_help=False)
+    parser = argparse.ArgumentParser(
+        description="Creates CNN Models for Card Games", add_help=False
+    )
 
     # Create a mutually exclusive group
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-C", "--create", action="store_true", help="Create a new model")
     group.add_argument(
-        '-C', '--create', 
-        action='store_true', 
-        help='Create a new model'
-    )
-    group.add_argument(
-        '-R', '--retrain', 
-        action='store_true', 
-        help='Retrain an existing model'
+        "-R", "--retrain", action="store_true", help="Retrain an existing model"
     )
     group.add_argument(
-        '-E', '--expand', 
-        action='store_true', 
-        help='Expand an existing model'
-    )
-    
-    parser.add_argument(
-        '-v', '--version',
-        type=str,
-        help='xx.xx.xxx (for older versions try x.x.x)'
-    )
-    parser.add_argument(
-        '-c', '--cardset',
-        type=str,
-        help='Based on the large json: ex) LorcanaCard or MTGCard'
+        "-E", "--expand", action="store_true", help="Expand an existing model"
     )
 
     parser.add_argument(
-        '--verbose', 
-        action='store_true', 
-        help='Enable verbose mode'
+        "-v", "--version", type=str, help="xx.xx.xxx (for older versions try x.x.x)"
+    )
+    parser.add_argument(
+        "-c",
+        "--cardset",
+        type=str,
+        help="Based on the large json: ex) LorcanaCard or MTGCard",
     )
 
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose mode")
+
     parser.add_argument(
-        '-h','--help', 
-        action='help',
+        "-h",
+        "--help",
+        action="help",
         default=argparse.SUPPRESS,
-        help='For those with room temperature IQ'
+        help="For those with room temperature IQ",
     )
-
 
     args = parser.parse_args()
 
     return args
 
-def get_callbacks(model_filepath: str): 
+
+def get_callbacks(model_filepath: str):
     # defines when the model will stop training
     accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.98)
 
     # saves a snapshot of the model while it is training
     # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
-    checkpoint_filepath = os.path.join(model_filepath, 'checkpoint.keras')
+    checkpoint_filepath = os.path.join(model_filepath, "checkpoint.keras")
     checkpoint_callback = callbacks.ModelCheckpoint(
-        filepath=checkpoint_filepath,
-        save_weights_only=False,
-        save_best_only=False
+        filepath=checkpoint_filepath, save_weights_only=False, save_best_only=False
     )
 
     # logs the epoch, accuracy, and loss for a training session
     # note: removing this would also probably result in a performance increase
-    csv_logger_callback = CsvLoggerCallback(os.path.join(model_filepath, 'training_logs.csv'))  
+    csv_logger_callback = CsvLoggerCallback(
+        os.path.join(model_filepath, "training_logs.csv")
+    )
 
     # Define the ReduceLROnPlateau callback
     reduce_lr_callback = callbacks.ReduceLROnPlateau(
-        monitor='val_loss',  # Metric to monitor
-        factor=0.2,          # Factor by which the learning rate will be reduced
-        patience=5,          # Number of epochs with no improvement after which learning rate will be reduced
-        min_lr=0.00001       # Lower bound on the learning rate
+        monitor="val_loss",  # Metric to monitor
+        factor=0.2,  # Factor by which the learning rate will be reduced
+        patience=5,  # Number of epochs with no improvement after which learning rate will be reduced
+        min_lr=0.00001,  # Lower bound on the learning rate
     )
 
     clear_memory_callback = ClearMemory()
 
-    return [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback] 
+    return [accuracy_threshold_callback, checkpoint_callback, csv_logger_callback]
+
+
 # different actions one can take
 def create_new_model(
-        learning_rate,
-        beta_1,
-        beta_2,
-        metrics,
-        loss,
-        model_filepath,
-        train_labels_filepath, 
-        test_labels_filepath, 
-        train_images_filepath, 
-        test_images_filepath,
-        img_width,
-        img_height,
-        unique_classes,
-        callbacks,
-        verbose,
-        epochs,
-    ):
-
+    learning_rate,
+    beta_1,
+    beta_2,
+    metrics,
+    loss,
+    model_filepath,
+    train_labels_filepath,
+    test_labels_filepath,
+    train_images_filepath,
+    test_images_filepath,
+    img_width,
+    img_height,
+    unique_classes,
+    callbacks,
+    verbose,
+    epochs,
+):
     # save some specs of the model that is being trained
     pre_save_model_specs(
         model_filepath=model_filepath,
@@ -144,38 +146,30 @@ def create_new_model(
         model=model,
         model_filepath=model_filepath,
         img_width=img_width,
-        img_height=img_height, 
-        train_labels_filepath=train_labels_filepath, 
-        test_labels_filepath=test_labels_filepath, 
-        train_images_filepath=train_images_filepath, 
+        img_height=img_height,
+        train_labels_filepath=train_labels_filepath,
+        test_labels_filepath=test_labels_filepath,
+        train_images_filepath=train_images_filepath,
         test_images_filepath=test_images_filepath,
         callbacks=callbacks,
         verbose=verbose,
         epochs=epochs,
     )
- 
-def retrain_existing_model(
-        model_filepath,
-        train_labels_filepath, 
-        test_labels_filepath, 
-        train_images_filepath, 
-        test_images_filepath,
-        img_width,
-        img_height,
-        callbacks,
-        verbose,
-        epochs,
-    ):
-    # adds to the current dataset (without adding new classifications)
-    # keeps the current model
-    add_new_data(
-        train_labels_filepath=train_labels_filepath, 
-        test_labels_filepath=test_labels_filepath, 
-        train_images_filepath=train_images_filepath, 
-        test_images_filepath=test_images_filepath,
-        verbose=verbose,
-    )
 
+
+def retrain_existing_model(
+    model_filepath,
+    original_filepath,
+    train_labels_filepath,
+    test_labels_filepath,
+    train_images_filepath,
+    test_images_filepath,
+    img_width,
+    img_height,
+    callbacks,
+    verbose,
+    epochs,
+):
     # this is for when a client uses the model and gets new labled data
     # might as well capitalize on this and continue to train the model and make it better
     model = fit_model(
@@ -183,9 +177,9 @@ def retrain_existing_model(
         model_filepath=model_filepath,
         img_width=img_width,
         img_height=img_height,
-        train_labels_filepath=train_labels_filepath, 
-        test_labels_filepath=test_labels_filepath, 
-        train_images_filepath=train_images_filepath, 
+        train_labels_filepath=train_labels_filepath,
+        test_labels_filepath=test_labels_filepath,
+        train_images_filepath=train_images_filepath,
         test_images_filepath=test_images_filepath,
         callbacks=callbacks,
         verbose=verbose,
@@ -193,7 +187,7 @@ def retrain_existing_model(
     )
 
 def expand_existing_model():
-    # adds to the current dataset (with new classifications) 
+    # adds to the current dataset (with new classifications)
     # creates a new model
 
     # this is for when a client uses the model and gets new labled data that CANNOT be classified by the current model
@@ -203,101 +197,111 @@ def expand_existing_model():
     # you should also only do this periodically
     pass
 
-# useable functions
-def add_new_data(
-        train_labels_filepath, 
-        test_labels_filepath, 
-        train_images_filepath, 
-        test_images_filepath,
-        verbose: bool = True,
-):
-    # this is when you have labeled data that you want to retrain the model on
-    # augment the images 
-    # add them to the testing and training image folders
-    # append the according labels to the .csv files
-    # you are finished
-    pass
-
-
-
 
 if __name__ == "__main__":
     # ===========================================
     # defines parameters (both defaults that don't change, and variables and flags)
     # defaults
-    image_size = 'large'
-    inital_json_grab =  3 # -1 to get all of the objects in the json
-    img_width, img_height = 100, 100 # 450, 650 
+    image_size = "large"
+    inital_json_grab = 3  # -1 to get all of the objects in the json
+    img_width, img_height = 100, 100  # 450, 650
     learning_rate = 0.0001
     beta_1 = 0.9
     beta_2 = 0.999
-    metrics = ['accuracy']
-    loss = 'sparse_categorical_crossentropy'
-    
+    metrics = ["accuracy"]
+    loss = "sparse_categorical_crossentropy"
+
     # flags
     args = compile_argument_parser()
 
     # ===========================================
     # define names and filepaths
     # NAMES
-    if args.version: version = args.version
-    else: version = version = datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S")
-    print(f'Model Version: {version}')
+    if args.version:
+        version = args.version
+    else:
+        version = version = datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S")
+    print(f"Model Version: {version}")
 
-    model_name = args.cardset.upper()[:-4] + '_' + version
+    model_name = args.cardset.upper()[:-4] + "_" + version
 
-    large_json_name = 'deckdrafterprod.' + args.cardset
-    
+    large_json_name = "deckdrafterprod." + args.cardset
+
     # FILEPATHS
-    data = os.path.join(PROJ_PATH, '.data', 'cnn', args.cardset)
+    # data = os.path.join(PROJ_PATH, ".data", "cnn", args.cardset)
 
-    # this is where the models and data are being stored
-    model_filepath = os.path.join(data, model_name)
-    if not os.path.exists(model_filepath): os.makedirs(model_filepath)
+    # # this is where the models and data are being stored
+    # model_filepath = os.path.join(data, model_name)
+    # os.makedirs(model_filepath, exist_ok=True)
 
-    # the dataset filepath holds the training/testing images and labels, as well as the formatted json filepath
-    dataset_filepath= os.path.join(data, 'dataset')
-    if not os.path.exists(dataset_filepath): os.makedirs(dataset_filepath)
+    # # the dataset filepath holds the training/testing images and labels, as well as the formatted json filepath
+    # dataset_filepath = os.path.join(data, "dataset")
+    # os.makedirs(dataset_filepath, exist_ok=True)
 
-    train_images_filepath = os.path.join(dataset_filepath, 'train_images')
-    test_images_filepath = os.path.join(dataset_filepath, 'test_images')
-    train_labels_filepath = os.path.join(dataset_filepath, 'train_labels.csv')
-    test_labels_filepath = os.path.join(dataset_filepath, 'test_labels.csv')
-    formatted_json_filepath = os.path.join(dataset_filepath, f'{large_json_name}({inital_json_grab}).json')
+    # train_images_filepath = os.path.join(dataset_filepath, "train_images")
+    # test_images_filepath = os.path.join(dataset_filepath, "test_images")
+    # os.makedirs(train_images_filepath, exist_ok=True)
+    # os.makedirs(test_images_filepath, exist_ok=True)
 
-    raw_json_filepath = os.path.join(data, '..', '..', f'{large_json_name}.json')
+    # train_labels_filepath = os.path.join(dataset_filepath, "train_labels.csv")
+    # test_labels_filepath = os.path.join(dataset_filepath, "test_labels.csv")
+    # formatted_json_filepath = os.path.join(
+    #     dataset_filepath, f"{large_json_name}({inital_json_grab}).json"
+    # )
+
+    # raw_json_filepath = os.path.join(data, "..", "..", f"{large_json_name}.json")
+
+    # original_filepath = os.path.join(data, "original") 
+    # original_image_filepath = os.path.join(original_filepath, "images")
+    # os.makedirs(original_filepath, exist_ok=True)
+    # os.makedirs(original_image_filepath, exist_ok=True)
+    fp = get_filepaths(args.cardset, model_name, large_json_name, inital_json_grab)
+
 
     # ===========================================
     # callbacks for fitting the model
-    callbacks = get_callbacks(model_filepath=model_filepath)
+    callbacks = get_callbacks(model_filepath=fp["MODEL"])
 
     # ===========================================
     # populates the smaller json with the nessicary information
-    format_json(raw_json_filepath, formatted_json_filepath, inital_json_grab, image_size)
-
-    # populate the training and testing directories
-    unique_classes = populate_images_and_labels(
-        formatted_json_filepath=formatted_json_filepath, 
-        train_labels_filepath=train_labels_filepath, 
-        test_labels_filepath=test_labels_filepath, 
-        train_images_filepath=train_images_filepath, 
-        test_images_filepath=test_images_filepath,
+    format_json(
+        fp["RAW_JSON"], fp["FORMATTED_JSON"], inital_json_grab, image_size
     )
 
+    # # populate the training and testing directories
+    # unique_classes = populate_images_and_labels(
+    #     formatted_json_filepath=formatted_json_filepath,
+    #     train_labels_filepath=train_labels_filepath,
+    #     test_labels_filepath=test_labels_filepath,
+    #     train_images_filepath=train_images_filepath,
+    #     test_images_filepath=test_images_filepath,
+    # )
+
     # ===========================================
-    if args.create: 
-        print(f'Creating a new model from scratch')
+    if args.create:
+        print(f"Creating a new model from scratch")
+
+        original_from_formatted_json(
+            formatted_json_filepath=fp["FORMATTED_JSON"],
+            original_filepath=fp["ORIGINAL"],
+            verbose=args.verbose,
+        )
+        unique_classes = create_datafolders_from_original(
+            original_filepath=fp["ORIGINAL"],
+            dataset_filepath=fp["DATASET"],
+            verbose=args.verbose,
+        )
         create_new_model(
             learning_rate=learning_rate,
             beta_1=beta_1,
             beta_2=beta_2,
             metrics=metrics,
             loss=loss,
-            model_filepath=model_filepath,
-            train_labels_filepath=train_labels_filepath, 
-            test_labels_filepath=test_labels_filepath, 
-            train_images_filepath=train_images_filepath, 
-            test_images_filepath=test_images_filepath,
+            model_filepath=fp["MODEL"],
+            train_labels_filepath=fp["TRAIN_LABELS"],
+            test_labels_filepath=fp["TEST_LABELS"],
+            train_images_filepath=fp["TRAIN_IMAGES"],
+            test_images_filepath=fp["TEST_IMAGES"],
             img_width=img_width,
             img_height=img_height,
             unique_classes=unique_classes,
@@ -306,13 +310,19 @@ if __name__ == "__main__":
             epochs=10000000000000,
         )
     elif args.retrain:
-        print(f'Continuing to train a prexsisting model')
+        print(f"Continuing to train a prexsisting model")
+
+        unique_classes = create_datafolders_from_original(
+            original_filepath=fp["ORIGINAL"],
+            dataset_filepath=fp["DATASET"], 
+            verbose=args.verbose,
+        )
         retrain_existing_model(
-            model_filepath=model_filepath,
-            train_labels_filepath=train_labels_filepath, 
-            test_labels_filepath=test_labels_filepath, 
-            train_images_filepath=train_images_filepath, 
-            test_images_filepath=test_images_filepath,
+            model_filepath=fp["MODEL"],
+            train_labels_filepath=fp["TRAIN_LABELS"],
+            test_labels_filepath=fp["TEST_LABELS"],
+            train_images_filepath=fp["TRAIN_IMAGES"],
+            test_images_filepath=fp["TEST_IMAGES"],
             img_width=img_width,
             img_height=img_height,
             callbacks=callbacks,
@@ -320,13 +330,23 @@ if __name__ == "__main__":
             epochs=10000000000000,
         )
     elif args.expand:
-        print(f'Expanding the current model to hold more classes')
+        print(f"Expanding the current model to hold more classes")
         expand_existing_model()
 
-    print(f'Model Version: {version}')
-    
-
-    
-        
+    print(f"Model Version: {version}")
 
 
+
+# for the first time that a model is compiled, it should append the entire small json and its images to the original filepaths
+# convert the json to images that will populate the original image folder and original csv file
+# given and "original" image folder and csv file, augment the data into training and testing data
+#   maybe at the same time, populate that augmented data to the training and testing filepath
+#   remove the originals from the original image folder and original csv path
+#   this will be the queue that we append to when we have new data that we want the model to train on
+#
+# there should be something in the model specs that highlights the
+# unique classes
+# which classes a model is able to read from the json
+#   you gotta probably add the class number to a card type as well
+# this will allow for classifications to be added later on
+# I am getting ahead of myself

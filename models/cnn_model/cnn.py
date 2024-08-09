@@ -16,7 +16,8 @@ from PIL import Image
 from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback, ClearMemory
 from helper.image_processing import get_tensor_from_dir
 from helper.helper import get_current_time, get_elapsed_time
-from helper.model_specs import pre_save_model_specs, post_save_model_specs
+from helper.model_specs import pre_save_model_specs, post_save_model_specs 
+
 
 def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):
     # Load the CSV file
@@ -126,7 +127,7 @@ def fit_model(
     print(f'Accuracy: {accuracy}')
 
 
-    specs_filepath = os.path.join(model_filepath, 'model_specs.txt')
+    specs_filepath = os.path.join(model_filepath, 'specs.json')
     training_time = get_elapsed_time(st)
     post_save_model_specs(
         specs_filepath=specs_filepath,

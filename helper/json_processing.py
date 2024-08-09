@@ -26,12 +26,14 @@ def create_smaller_json(
     # get the specified # of data from the dataset
     if image_count == -1:
         if verbose:
-            print(f'Copying ALL objects from "{json_filepath}" to "{new_filepath}" ...')
+            print(f'Copying ALL objects from "{
+                  json_filepath}" to "{new_filepath}" ...')
         small_data = data
     else:
         if verbose:
             print(
-                f'Copying {image_count} objects from "{json_filepath}" to "{new_filepath}" ...'
+                f'Copying {image_count} objects from "{
+                    json_filepath}" to "{new_filepath}" ...'
             )
         small_data = data[:image_count]
 
@@ -101,7 +103,8 @@ def format_image_attributes(
     for json_object in data:
         if (
             image_attribute_label in json_object
-        ):  # use the first images that we see (these would probably be the best)
+            # use the first images that we see (these would probably be the best)
+        ):
             json_object["image"] = json_object[image_attribute_label][image_size]
             # delete the attribute that the json object has of the old image data
             del json_object[image_attribute_label]
@@ -110,7 +113,8 @@ def format_image_attributes(
         else:
             # if there is no image found for the object, just skip it for now, and print a message
             if verbose:
-                print(f"({json_object['_id']}) NO IMAGES FOUND [removed from json] ...")
+                print(
+                    f"({json_object['_id']}) NO IMAGES FOUND [removed from json] ...")
 
     # Write the modified data back to the JSON file
     with open(json_filepath, "w") as f:

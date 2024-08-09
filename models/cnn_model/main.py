@@ -1,31 +1,30 @@
-import os, sys
-
-PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.append(PROJ_PATH)
-
-
-import argparse
-import datetime
-
-from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
-
-from helper.callbacks import (
-    CsvLoggerCallback,
-    ValidationAccuracyThresholdCallback,
-    ClearMemory,
-)
-from helper.json_processing import format_json
-
-# from helper.data import populate_images_and_labels
+from filepaths import get_filepaths
+from cnn import compile_model, fit_model
+from helper.model_specs import pre_save_model_specs
 from helper.data import (
     populate_datafolder_from_original,
     populate_original_from_formatted_json,
     flush_original_data,
 )
-from helper.model_specs import pre_save_model_specs
+from helper.json_processing import format_json
+from helper.callbacks import (
+    CsvLoggerCallback,
+    ValidationAccuracyThresholdCallback,
+    ClearMemory,
+)
+from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
+import datetime
+import argparse
+import os
+import sys
 
-from cnn import compile_model, fit_model
-from filepaths import get_filepaths
+PROJ_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), "..", ".."))
+sys.path.append(PROJ_PATH)
+
+
+# from helper.data import populate_images_and_labels
+
 
 def compile_argument_parser():
     parser = argparse.ArgumentParser(
@@ -34,7 +33,8 @@ def compile_argument_parser():
 
     # Create a mutually exclusive group
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-C", "--create", action="store_true", help="Create a new model")
+    group.add_argument("-C", "--create", action="store_true",
+                       help="Create a new model")
     group.add_argument(
         "-R", "--retrain", action="store_true", help="Retrain an existing model"
     )
@@ -52,7 +52,8 @@ def compile_argument_parser():
         help="Based on the large json: ex) LorcanaCard or MTGCard",
     )
 
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose mode")
+    parser.add_argument("--verbose", action="store_true",
+                        help="Enable verbose mode")
 
     parser.add_argument(
         "-h",
@@ -69,7 +70,8 @@ def compile_argument_parser():
 
 def get_callbacks(fp):
     # defines when the model will stop training
-    accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.98)
+    accuracy_threshold_callback = ValidationAccuracyThresholdCallback(
+        threshold=0.98)
 
     # saves a snapshot of the model while it is training
     # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
@@ -104,7 +106,7 @@ def create_new_model(
     beta_2,
     metrics,
     loss,
-    fp, 
+    fp,
     img_width,
     img_height,
     unique_classes,
@@ -114,7 +116,7 @@ def create_new_model(
 ):
     # save some specs of the model that is being trained
     pre_save_model_specs(
-        fp=fp, 
+        fp=fp,
         model_name=model_name,
         image_size=image_size,
         inital_json_grab=inital_json_grab,
@@ -143,14 +145,15 @@ def create_new_model(
         model=model,
         img_width=img_width,
         img_height=img_height,
-        fp=fp, 
+        fp=fp,
         callbacks=callbacks,
         verbose=verbose,
         epochs=epochs,
     )
 
+
 def retrain_existing_model(
-    fp, 
+    fp,
     img_width,
     img_height,
     callbacks,
@@ -169,6 +172,7 @@ def retrain_existing_model(
         verbose=verbose,
         epochs=epochs,
     )
+
 
 def expand_existing_model():
     # adds to the current dataset (with new classifications)
@@ -211,7 +215,8 @@ if __name__ == "__main__":
     large_json_name = "deckdrafterprod." + args.cardset
 
     # FILEPATHS
-    fp = get_filepaths(args.cardset, model_name, large_json_name, inital_json_grab)
+    fp = get_filepaths(args.cardset, model_name,
+                       large_json_name, inital_json_grab)
 
     # ===========================================
     # callbacks for fitting the model
@@ -220,9 +225,8 @@ if __name__ == "__main__":
     # ===========================================
     if args.create:
         print(f"Creating a new model from scratch")
-        format_json(
-            fp["RAW_JSON"], fp["FORMATTED_JSON"], inital_json_grab, image_size
-        )
+        format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
+                    inital_json_grab, image_size)
         populate_original_from_formatted_json(
             fp=fp,
             verbose=args.verbose,
@@ -264,24 +268,7 @@ if __name__ == "__main__":
         print(f"Expanding the current model to hold more classes")
         expand_existing_model()
 
-
     # ensure that the original data folder is wiped for the next use (hopefully the training)
-    # flush_original_data(fp=fp)
+    flush_original_data(fp=fp)
 
     print(f"Model Version: {version}")
-
-
-
-# for the first time that a model is compiled, it should append the entire small json and its images to the original filepaths
-# convert the json to images that will populate the original image folder and original csv file
-# given and "original" image folder and csv file, augment the data into training and testing data
-#   maybe at the same time, populate that augmented data to the training and testing filepath
-#   remove the originals from the original image folder and original csv path
-#   this will be the queue that we append to when we have new data that we want the model to train on
-#
-# there should be something in the model specs that highlights the
-# unique classes
-# which classes a model is able to read from the json
-#   you gotta probably add the class number to a card type as well
-# this will allow for classifications to be added later on
-# I am getting ahead of myself

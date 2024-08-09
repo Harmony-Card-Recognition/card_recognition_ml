@@ -35,8 +35,9 @@ def generate_unique_filename(directory, base_name, extension):
 # LABELS
 def alphanumeric_to_int(alp_num_str: str):
     try:
-        result = int(hashlib.sha256(alp_num_str.encode()).hexdigest(), 16) % 10**8
+        result = int(hashlib.sha256(
+            alp_num_str.encode()).hexdigest(), 16) % 10**8
     except ValueError:
         raise ValueError("Invalid alphanumeric string provided.")
-    
+
     return result

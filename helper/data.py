@@ -1,17 +1,17 @@
-import os, sys
-PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+from helper.helper import generate_unique_filename, alphanumeric_to_int
+from helper.image_processing import random_edit_img
+from io import BytesIO
+from PIL import Image, UnidentifiedImageError
+import json
+import requests
+import pandas as pd
+import os
+import sys
+PROJ_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', '..'))
 sys.path.append(PROJ_PATH)
 
-import pandas as pd
-import requests
-import json
 
-from PIL import Image, UnidentifiedImageError
-from io import BytesIO
-
-from helper.image_processing import random_edit_img
-from helper.helper import generate_unique_filename, alphanumeric_to_int
- 
 def process_original_dataframe(
     df,
     original_images,
@@ -43,7 +43,8 @@ def process_original_dataframe(
             distorted_img_filename = generate_unique_filename(
                 output_images, f"{i}_distorted", "png"
             )
-            distorted_img_path = os.path.join(output_images, distorted_img_filename)
+            distorted_img_path = os.path.join(
+                output_images, distorted_img_filename)
             distorted_img.save(distorted_img_path)
 
             filenames.append(distorted_img_filename)
@@ -53,7 +54,7 @@ def process_original_dataframe(
     # Create a dictionary with specified column names
     data = {
         # lookup the correct label based on the _id, (or variable ids). this should be a unique label
-        column_names[0]: labels,  
+        column_names[0]: labels,
         column_names[1]: filenames,
         column_names[2]: ids,
     }
@@ -62,9 +63,11 @@ def process_original_dataframe(
     # Save the labels to CSV file
     if verbose:
         print(f"Saving labels to {output_labels} ...")
-    labels_df.to_csv(output_labels, mode='a', index=False, header=not os.path.exists(output_labels))
+    labels_df.to_csv(output_labels, mode='a', index=False,
+                     header=not os.path.exists(output_labels))
 
     return labels_df
+
 
 def populate_original_from_formatted_json(
     fp, verbose=True
@@ -87,13 +90,14 @@ def populate_original_from_formatted_json(
             img_path = os.path.join(fp["ORIGINAL_IMAGES"], img_filename)
             img.save(img_path)
             df.at[i, "filename"] = img_filename
-            df.at[i, "label"] = i 
+            df.at[i, "label"] = i
         except UnidentifiedImageError:
             if verbose:
                 print(f'Error: UnidentifiedImageError for {row["_id"]}')
             continue
 
     df.to_csv(fp["ORIGINAL_LABELS"], index=False)
+
 
 def populate_datafolder_from_original(
     fp,
@@ -118,6 +122,7 @@ def populate_datafolder_from_original(
 
     # The function now returns the number of unique classes
     return len(df["_id"].unique())
+
 
 def flush_original_data(fp):
     # remove all of the images

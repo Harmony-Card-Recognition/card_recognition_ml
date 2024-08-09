@@ -2,7 +2,6 @@ import random
 import numpy as np
 import tensorflow as tf
 import requests
-
 from typing import Tuple
 from PIL import Image, ImageFilter, ImageEnhance
 from io import BytesIO
@@ -22,7 +21,8 @@ def zoom_rotate_img(image):
     background = Image.new("RGB", initial_size, bg_color)
 
     # determine the center location to place our rotated card
-    center_box = tuple((n - o) // 2 for n, o in zip(initial_size, scaled_img_size))
+    center_box = tuple((n - o) // 2 for n,
+                       o in zip(initial_size, scaled_img_size))
 
     # scale the image
     scaled_img = image.resize(scaled_img_size)
@@ -160,7 +160,8 @@ def random_edit_img(
             image_bytes = tf.image.encode_jpeg(
                 tf.cast(tensor * 255, tf.uint8), quality=quality
             )
-            tensor = tf.cast(tf.image.decode_jpeg(image_bytes), tf.float32) / 255.0
+            tensor = tf.cast(tf.image.decode_jpeg(
+                image_bytes), tf.float32) / 255.0
             if verbose:
                 print(f"JPEG quality adjusted with quality={quality}")
 
@@ -183,7 +184,8 @@ def preprocess_tensor(image: tf.Tensor, img_width: int, img_height: int) -> tf.T
 def get_tensor_from_dir(image_path: str, img_width: int, img_height: int) -> tf.Tensor:
     img = tf.io.read_file(image_path)
     img = tf.image.decode_jpeg(img, channels=3)
-    img = preprocess_tensor(image=img, img_width=img_width, img_height=img_height)
+    img = preprocess_tensor(
+        image=img, img_width=img_width, img_height=img_height)
     return img
 
 
@@ -192,7 +194,8 @@ def get_tensor_from_image(
 ) -> tf.Tensor:
     image_array = np.array(image)
     img = tf.convert_to_tensor(image_array, dtype=tf.float32)
-    img = preprocess_tensor(image=img, img_width=img_width, img_height=img_height)
+    img = preprocess_tensor(
+        image=img, img_width=img_width, img_height=img_height)
     return img
 
 

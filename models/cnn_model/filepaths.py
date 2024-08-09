@@ -6,6 +6,8 @@ sys.path.append(PROJ_PATH)
 def get_filepaths(cardset, model_name, large_json_name, inital_json_grab):
     data = os.path.join(PROJ_PATH, ".data", "cnn", cardset)
     model = os.path.join(data, model_name) 
+    keras_model = os.path.join(model, "model.keras")
+    checkpoint_model = os.path.join(model, "checkpoint.keras")
     dataset = os.path.join(data, "dataset")
     train_images = os.path.join(dataset, "train_images")
     test_images = os.path.join(dataset, "test_images")
@@ -24,6 +26,8 @@ def get_filepaths(cardset, model_name, large_json_name, inital_json_grab):
     filepaths = {
         "DATA": data, 
         "MODEL": model,
+        "KERAS_MODEL": keras_model,
+        "CHECKPOINT_MODEL": checkpoint_model,
         "DATASET": dataset, 
         "TRAIN_IMAGES": train_images,
         "TEST_IMAGES": test_images,

@@ -62,10 +62,9 @@ def process_original_dataframe(
     # Save the labels to CSV file
     if verbose:
         print(f"Saving labels to {output_labels} ...")
-    labels_df.to_csv(output_labels, index=False)
+    labels_df.to_csv(output_labels, mode='a', index=False, header=not os.path.exists(output_labels))
 
     return labels_df
-
 
 def populate_original_from_formatted_json(
     fp, verbose=True
@@ -96,7 +95,6 @@ def populate_original_from_formatted_json(
 
     df.to_csv(fp["ORIGINAL_LABELS"], index=False)
 
-
 def populate_datafolder_from_original(
     fp,
     verbose=False,
@@ -120,3 +118,11 @@ def populate_datafolder_from_original(
 
     # The function now returns the number of unique classes
     return len(df["_id"].unique())
+
+def flush_original_data(fp):
+    # remove all of the images
+    for image in os.listdir(fp["ORIGINAL_IMAGES"]):
+        os.remove(os.path.join(fp["ORIGINAL_IMAGES"], image))
+    # remove all of the labels
+    # this may need to be changed as we want to append to the file, not overwrite it
+    os.remove(fp["ORIGINAL_LABELS"])

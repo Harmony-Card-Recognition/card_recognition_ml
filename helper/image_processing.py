@@ -201,15 +201,3 @@ def get_image_from_uri(image_uri: str) -> Image.Image:
     image_data = response.content
     image = Image.open(BytesIO(image_data))
     return image
-
-
-# NOTE: this is useless now
-def get_img_dim(image_size: str) -> Tuple[int, int]:
-    if image_size == "small":
-        width, height = 146, 204
-    elif image_size == "normal":
-        width, height = 488, 680
-    elif image_size == "large":
-        width, height = 672, 936
-        # width, height = 313, 437
-    return width, height

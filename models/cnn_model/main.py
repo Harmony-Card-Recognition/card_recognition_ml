@@ -20,6 +20,7 @@ from helper.json_processing import format_json
 from helper.data import (
     populate_datafolder_from_original,
     populate_original_from_formatted_json,
+    flush_original_data,
 )
 from helper.model_specs import pre_save_model_specs
 
@@ -148,7 +149,6 @@ def create_new_model(
         epochs=epochs,
     )
 
-
 def retrain_existing_model(
     fp, 
     img_width,
@@ -159,6 +159,7 @@ def retrain_existing_model(
 ):
     # this is for when a client uses the model and gets new labled data
     # might as well capitalize on this and continue to train the model and make it better
+    model = models.load_model(fp["KERAS_MODEL"])
     model = fit_model(
         model=model,
         img_width=img_width,
@@ -212,21 +213,16 @@ if __name__ == "__main__":
     # FILEPATHS
     fp = get_filepaths(args.cardset, model_name, large_json_name, inital_json_grab)
 
-
     # ===========================================
     # callbacks for fitting the model
     callbacks = get_callbacks(fp=fp)
 
     # ===========================================
-    # populates the smaller json with the nessicary information
-    format_json(
-        fp["RAW_JSON"], fp["FORMATTED_JSON"], inital_json_grab, image_size
-    )
-
-    # ===========================================
     if args.create:
         print(f"Creating a new model from scratch")
-
+        format_json(
+            fp["RAW_JSON"], fp["FORMATTED_JSON"], inital_json_grab, image_size
+        )
         populate_original_from_formatted_json(
             fp=fp,
             verbose=args.verbose,
@@ -267,6 +263,10 @@ if __name__ == "__main__":
     elif args.expand:
         print(f"Expanding the current model to hold more classes")
         expand_existing_model()
+
+
+    # ensure that the original data folder is wiped for the next use (hopefully the training)
+    # flush_original_data(fp=fp)
 
     print(f"Model Version: {version}")
 

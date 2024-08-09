@@ -17,9 +17,9 @@ from helper.callbacks import (
 from helper.json_processing import format_json
 
 # from helper.data import populate_images_and_labels
-from helper.new_data import (
-    original_from_formatted_json,
-    create_datafolders_from_original,
+from helper.data import (
+    populate_datafolder_from_original,
+    populate_original_from_formatted_json,
 )
 from helper.model_specs import pre_save_model_specs
 

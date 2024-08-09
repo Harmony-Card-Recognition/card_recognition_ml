@@ -3,7 +3,6 @@ PROJ_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.append(PROJ_PATH)
 
 
-
 def get_filepaths(cardset, model_name, large_json_name, inital_json_grab):
     data = os.path.join(PROJ_PATH, ".data", "cnn", cardset)
     model = os.path.join(data, model_name) 

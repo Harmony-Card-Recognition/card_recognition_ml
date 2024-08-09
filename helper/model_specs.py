@@ -1,5 +1,4 @@
 import json
-import os
 
 
 def pre_save_model_specs(

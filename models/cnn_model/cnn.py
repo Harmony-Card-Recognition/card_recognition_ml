@@ -4,19 +4,16 @@ sys.path.append(PROJ_PATH)
 
 
 import time 
-import json
 import pandas as pd
 import tensorflow as tf
 
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision # type: ignore
 
 from PIL import Image
-# from keras import callbacks, layers, models, optimizers, mixed_precision
 
-from helper.callbacks import CsvLoggerCallback, ValidationAccuracyThresholdCallback, ClearMemory
 from helper.image_processing import get_tensor_from_dir
 from helper.helper import get_current_time, get_elapsed_time
-from helper.model_specs import pre_save_model_specs, post_save_model_specs 
+from helper.model_specs import post_save_model_specs 
 
 
 def create_dataset(csv_file, image_dir, img_width, img_height, batch_size):

@@ -14,10 +14,10 @@ from helper.helper import generate_unique_filename, alphanumeric_to_int
  
 def process_images(
     df,
-    images_folder,
-    output_dir,
+    original_images,
+    output_images,
+    output_labels,
     num_distortions,
-    output_csv_filepath,
     verbose=False,
 ):
     filenames = []
@@ -30,7 +30,7 @@ def process_images(
         if verbose:
             print(f'Processing {row["_id"]} - image {i}/{len(df)-1} ...')
         try:
-            img_path = os.path.join(images_folder, row["filename"])
+            img_path = os.path.join(original_images, row["filename"])
             img = Image.open(img_path)
         except UnidentifiedImageError:
             if verbose:
@@ -41,9 +41,9 @@ def process_images(
         for j in range(num_distortions):
             distorted_img = random_edit_img(img)
             distorted_img_filename = generate_unique_filename(
-                output_dir, f"{i}_distorted", "png"
+                output_images, f"{i}_distorted", "png"
             )
-            distorted_img_path = os.path.join(output_dir, distorted_img_filename)
+            distorted_img_path = os.path.join(output_images, distorted_img_filename)
             distorted_img.save(distorted_img_path)
 
             filenames.append(distorted_img_filename)
@@ -61,23 +61,16 @@ def process_images(
 
     # Save the labels to CSV file
     if verbose:
-        print(f"Saving labels to {output_csv_filepath} ...")
-    labels_df.to_csv(output_csv_filepath, index=False)
+        print(f"Saving labels to {output_labels} ...")
+    labels_df.to_csv(output_labels, index=False)
 
     return labels_df
 
 
 def original_from_formatted_json(
-    formatted_json_filepath, original_filepath, verbose=True
+    fp, verbose=True
 ):
-    # this should be the place that the json wiht the key value paris should be created
-    # there is no need for you to worry about adding new classes... if that happens, then we should recompile the model entirely
-    # this will be stored in the .data/dataset/bidict.json
-
-    original_images_folder = os.path.join(original_filepath, "images")
-    original_csv_file = os.path.join(original_filepath, "labels.csv")
-
-    with open(formatted_json_filepath, "r") as json_file:
+    with open(fp["FORMATTED_JSON"], "r") as json_file:
         data = json.load(json_file)
 
     df = pd.DataFrame(data)
@@ -92,7 +85,7 @@ def original_from_formatted_json(
             img = Image.open(BytesIO(response.content))
             img_filename = f'{row["_id"]}.png'
             # img_filename = f'{row["_id"]}_{i}.png'  # Ensure unique filename
-            img_path = os.path.join(original_images_folder, img_filename)
+            img_path = os.path.join(fp["ORIGINAL_IMAGES"], img_filename)
             img.save(img_path)
             df.at[i, "filename"] = img_filename
             df.at[i, "label"] = i 
@@ -101,32 +94,23 @@ def original_from_formatted_json(
                 print(f'Error: UnidentifiedImageError for {row["_id"]}')
             continue
 
-    df.to_csv(original_csv_file, index=False)
+    df.to_csv(fp["ORIGINAL_LABELS"], index=False)
 
 
 def create_datafolders_from_original(
-    original_filepath,
-    dataset_filepath,
+    fp,
     verbose=False,
 ):
-    train_images_dir=os.path.join(dataset_filepath, 'train_images')
-    test_images_dir=os.path.join(dataset_filepath, 'test_images')
-    train_labels_dir=os.path.join(dataset_filepath, 'train_labels.csv')
-    test_labels_dir=os.path.join(dataset_filepath, 'test_labels.csv')
-
-    images_folder = os.path.join(original_filepath, "images")
-    csv_file = os.path.join(original_filepath, "labels.csv")
-
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv(fp["ORIGINAL_LABELS"])
 
     if verbose:
         print("Reading images from the original folder ...")
 
     process_images(
-        df, images_folder, train_images_dir, 15, train_labels_dir, verbose
+        df, fp["ORIGINAL_IMAGES"], fp["TRAIN_IMAGES"], fp["TRAIN_LABELS"], 15, verbose
     )
     process_images(
-        df, images_folder, test_images_dir, 5, test_labels_dir, verbose
+        df, fp["ORIGINAL_IMAGES"], fp["TEST_IMAGES"], fp["TEST_LABELS"], 5, verbose
     )
 
     if verbose:

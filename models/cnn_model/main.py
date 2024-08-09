@@ -66,13 +66,13 @@ def compile_argument_parser():
     return args
 
 
-def get_callbacks(model_filepath: str):
+def get_callbacks(fp):
     # defines when the model will stop training
     accuracy_threshold_callback = ValidationAccuracyThresholdCallback(threshold=0.98)
 
     # saves a snapshot of the model while it is training
     # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
-    checkpoint_filepath = os.path.join(model_filepath, "checkpoint.keras")
+    checkpoint_filepath = os.path.join(fp["MODEL"], "checkpoint.keras")
     checkpoint_callback = callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath, save_weights_only=False, save_best_only=False
     )
@@ -80,7 +80,7 @@ def get_callbacks(model_filepath: str):
     # logs the epoch, accuracy, and loss for a training session
     # note: removing this would also probably result in a performance increase
     csv_logger_callback = CsvLoggerCallback(
-        os.path.join(model_filepath, "training_logs.csv")
+        os.path.join(fp["MODEL"], "training_logs.csv")
     )
 
     # Define the ReduceLROnPlateau callback
@@ -103,11 +103,7 @@ def create_new_model(
     beta_2,
     metrics,
     loss,
-    model_filepath,
-    train_labels_filepath,
-    test_labels_filepath,
-    train_images_filepath,
-    test_images_filepath,
+    fp, 
     img_width,
     img_height,
     unique_classes,
@@ -117,7 +113,7 @@ def create_new_model(
 ):
     # save some specs of the model that is being trained
     pre_save_model_specs(
-        model_filepath=model_filepath,
+        fp=fp, 
         model_name=model_name,
         image_size=image_size,
         inital_json_grab=inital_json_grab,
@@ -144,13 +140,9 @@ def create_new_model(
     )
     model = fit_model(
         model=model,
-        model_filepath=model_filepath,
         img_width=img_width,
         img_height=img_height,
-        train_labels_filepath=train_labels_filepath,
-        test_labels_filepath=test_labels_filepath,
-        train_images_filepath=train_images_filepath,
-        test_images_filepath=test_images_filepath,
+        fp=fp, 
         callbacks=callbacks,
         verbose=verbose,
         epochs=epochs,
@@ -158,12 +150,7 @@ def create_new_model(
 
 
 def retrain_existing_model(
-    model_filepath,
-    original_filepath,
-    train_labels_filepath,
-    test_labels_filepath,
-    train_images_filepath,
-    test_images_filepath,
+    fp, 
     img_width,
     img_height,
     callbacks,
@@ -174,13 +161,9 @@ def retrain_existing_model(
     # might as well capitalize on this and continue to train the model and make it better
     model = fit_model(
         model=model,
-        model_filepath=model_filepath,
         img_width=img_width,
         img_height=img_height,
-        train_labels_filepath=train_labels_filepath,
-        test_labels_filepath=test_labels_filepath,
-        train_images_filepath=train_images_filepath,
-        test_images_filepath=test_images_filepath,
+        fp=fp,
         callbacks=callbacks,
         verbose=verbose,
         epochs=epochs,
@@ -224,43 +207,15 @@ if __name__ == "__main__":
     print(f"Model Version: {version}")
 
     model_name = args.cardset.upper()[:-4] + "_" + version
-
     large_json_name = "deckdrafterprod." + args.cardset
 
     # FILEPATHS
-    # data = os.path.join(PROJ_PATH, ".data", "cnn", args.cardset)
-
-    # # this is where the models and data are being stored
-    # model_filepath = os.path.join(data, model_name)
-    # os.makedirs(model_filepath, exist_ok=True)
-
-    # # the dataset filepath holds the training/testing images and labels, as well as the formatted json filepath
-    # dataset_filepath = os.path.join(data, "dataset")
-    # os.makedirs(dataset_filepath, exist_ok=True)
-
-    # train_images_filepath = os.path.join(dataset_filepath, "train_images")
-    # test_images_filepath = os.path.join(dataset_filepath, "test_images")
-    # os.makedirs(train_images_filepath, exist_ok=True)
-    # os.makedirs(test_images_filepath, exist_ok=True)
-
-    # train_labels_filepath = os.path.join(dataset_filepath, "train_labels.csv")
-    # test_labels_filepath = os.path.join(dataset_filepath, "test_labels.csv")
-    # formatted_json_filepath = os.path.join(
-    #     dataset_filepath, f"{large_json_name}({inital_json_grab}).json"
-    # )
-
-    # raw_json_filepath = os.path.join(data, "..", "..", f"{large_json_name}.json")
-
-    # original_filepath = os.path.join(data, "original") 
-    # original_image_filepath = os.path.join(original_filepath, "images")
-    # os.makedirs(original_filepath, exist_ok=True)
-    # os.makedirs(original_image_filepath, exist_ok=True)
     fp = get_filepaths(args.cardset, model_name, large_json_name, inital_json_grab)
 
 
     # ===========================================
     # callbacks for fitting the model
-    callbacks = get_callbacks(model_filepath=fp["MODEL"])
+    callbacks = get_callbacks(fp=fp)
 
     # ===========================================
     # populates the smaller json with the nessicary information
@@ -268,27 +223,16 @@ if __name__ == "__main__":
         fp["RAW_JSON"], fp["FORMATTED_JSON"], inital_json_grab, image_size
     )
 
-    # # populate the training and testing directories
-    # unique_classes = populate_images_and_labels(
-    #     formatted_json_filepath=formatted_json_filepath,
-    #     train_labels_filepath=train_labels_filepath,
-    #     test_labels_filepath=test_labels_filepath,
-    #     train_images_filepath=train_images_filepath,
-    #     test_images_filepath=test_images_filepath,
-    # )
-
     # ===========================================
     if args.create:
         print(f"Creating a new model from scratch")
 
         original_from_formatted_json(
-            formatted_json_filepath=fp["FORMATTED_JSON"],
-            original_filepath=fp["ORIGINAL"],
+            fp=fp,
             verbose=args.verbose,
         )
         unique_classes = create_datafolders_from_original(
-            original_filepath=fp["ORIGINAL"],
-            dataset_filepath=fp["DATASET"],
+            fp=fp,
             verbose=args.verbose,
         )
         create_new_model(
@@ -297,11 +241,7 @@ if __name__ == "__main__":
             beta_2=beta_2,
             metrics=metrics,
             loss=loss,
-            model_filepath=fp["MODEL"],
-            train_labels_filepath=fp["TRAIN_LABELS"],
-            test_labels_filepath=fp["TEST_LABELS"],
-            train_images_filepath=fp["TRAIN_IMAGES"],
-            test_images_filepath=fp["TEST_IMAGES"],
+            fp=fp,
             img_width=img_width,
             img_height=img_height,
             unique_classes=unique_classes,
@@ -313,16 +253,11 @@ if __name__ == "__main__":
         print(f"Continuing to train a prexsisting model")
 
         unique_classes = create_datafolders_from_original(
-            original_filepath=fp["ORIGINAL"],
-            dataset_filepath=fp["DATASET"], 
+            fp=fp,
             verbose=args.verbose,
         )
         retrain_existing_model(
-            model_filepath=fp["MODEL"],
-            train_labels_filepath=fp["TRAIN_LABELS"],
-            test_labels_filepath=fp["TEST_LABELS"],
-            train_images_filepath=fp["TRAIN_IMAGES"],
-            test_images_filepath=fp["TEST_IMAGES"],
+            fp=fp,
             img_width=img_width,
             img_height=img_height,
             callbacks=callbacks,

@@ -90,13 +90,9 @@ def compile_model(
 
 def fit_model(
     model,
-    model_filepath,
     img_width, 
     img_height, 
-    train_labels_filepath, 
-    test_labels_filepath, 
-    train_images_filepath, 
-    test_images_filepath,
+    fp,
     callbacks,
     verbose=True,
     batch_size=32,
@@ -106,8 +102,8 @@ def fit_model(
     if verbose: print('Network compiled, fitting data now ... \n')
     if verbose: print('Creating the training and testing datasets ...')
 
-    train_dataset = create_dataset(train_labels_filepath, train_images_filepath, img_width, img_height, batch_size=batch_size)
-    test_dataset = create_dataset(test_labels_filepath, test_images_filepath, img_width, img_height, batch_size=batch_size)
+    train_dataset = create_dataset(fp["TRAIN_LABELS"], fp["TRAIN_IMAGES"], img_width, img_height, batch_size=batch_size)
+    test_dataset = create_dataset(fp["TEST_LABELS"], fp["TEST_IMAGES"], img_width, img_height, batch_size=batch_size)
 
     st = time.time() 
     # Fit the model using the datasets
@@ -126,11 +122,9 @@ def fit_model(
     print(f'Loss: {loss}')
     print(f'Accuracy: {accuracy}')
 
-
-    specs_filepath = os.path.join(model_filepath, 'specs.json')
     training_time = get_elapsed_time(st)
     post_save_model_specs(
-        specs_filepath=specs_filepath,
+        fp=fp,
         training_time=training_time,
         loss=loss,
         accuracy=accuracy,
@@ -138,10 +132,9 @@ def fit_model(
     )
 
     # save it locally for future reuse
-    model.save(os.path.join(model_filepath, 'model.keras'))
-
+    model.save(os.path.join(fp["MODEL"], 'model.keras'))
 
     if verbose:
-        print(f'\nModel evaluated & saved locally at {model_filepath}.keras on {get_current_time()} after {training_time}!\n')
+        print(f'\nModel evaluated & saved locally at {fp["MODEL"]}.keras on {get_current_time()} after {training_time}!\n')
 
     return model

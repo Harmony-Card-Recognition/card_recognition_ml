@@ -3,7 +3,7 @@ import os
 
 
 def pre_save_model_specs(
-    model_filepath: str = None,
+    fp: str = None,
     model_name: str = None,
     image_size: str = None,
     inital_json_grab: int = None,
@@ -29,20 +29,19 @@ def pre_save_model_specs(
         "preprocessed_image_dimensions": f"{img_width}x{img_height}",
     }
 
-    specs_filepath = os.path.join(model_filepath, "specs.json")
-    with open(specs_filepath, "w") as f:
+    with open(fp["SPECS"], "w") as f:
         json.dump(specs, f, indent=4)
 
 
 def post_save_model_specs(
-    specs_filepath: str = None,
+    fp: str = None,
     training_time: str = None,  # I am probably wrong about this datatype but whatever
     loss: float = None,
     accuracy: float = None,
     model=None,  # the datatype isn’t important, but it is probably helpful
 ) -> None:
     # Read the existing specs from the JSON file
-    with open(specs_filepath, "r") as f:
+    with open(fp["SPECS"], "r") as f:
         specs = json.load(f)
 
     # Update the specs with new attributes
@@ -56,5 +55,5 @@ def post_save_model_specs(
     )
 
     # Write the updated specs back to the JSON file
-    with open(specs_filepath, "w") as f:
+    with open(fp["SPECS"], "w") as f:
         json.dump(specs, f, indent=4)

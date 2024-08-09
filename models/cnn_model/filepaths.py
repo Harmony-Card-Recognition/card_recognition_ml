@@ -19,7 +19,8 @@ def get_filepaths(cardset, model_name, large_json_name, inital_json_grab):
     raw_json = os.path.join(data, "..", "..", f"{large_json_name}.json")
     original = os.path.join(data, "original") 
     original_images = os.path.join(original, "images")
-    original_labels = os.path.join(original, "labels")
+    original_labels = os.path.join(original, "labels.csv")
+    specs = os.path.join(model, "specs.json")
     
     filepaths = {
         "DATA": data, 
@@ -33,7 +34,8 @@ def get_filepaths(cardset, model_name, large_json_name, inital_json_grab):
         "RAW_JSON": raw_json,
         "ORIGINAL": original,
         "ORIGINAL_IMAGES": original_images,
-        "ORIGINAL_LABELS": original_labels
+        "ORIGINAL_LABELS": original_labels, 
+        "SPECS": specs,
     }
 
     for path in filepaths.values():

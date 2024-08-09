@@ -227,11 +227,11 @@ if __name__ == "__main__":
     if args.create:
         print(f"Creating a new model from scratch")
 
-        original_from_formatted_json(
+        populate_original_from_formatted_json(
             fp=fp,
             verbose=args.verbose,
         )
-        unique_classes = create_datafolders_from_original(
+        unique_classes = populate_datafolder_from_original(
             fp=fp,
             verbose=args.verbose,
         )
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     elif args.retrain:
         print(f"Continuing to train a prexsisting model")
 
-        unique_classes = create_datafolders_from_original(
+        unique_classes = populate_datafolder_from_original(
             fp=fp,
             verbose=args.verbose,
         )

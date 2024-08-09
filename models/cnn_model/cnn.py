@@ -9,8 +9,6 @@ import tensorflow as tf
 
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision # type: ignore
 
-from PIL import Image
-
 from helper.image_processing import get_tensor_from_dir
 from helper.helper import get_current_time, get_elapsed_time
 from helper.model_specs import post_save_model_specs 

@@ -96,6 +96,9 @@ def populate_original_from_formatted_json(
                 print(f'Error: UnidentifiedImageError for {row["_id"]}')
             continue
 
+
+    # the url is not needed after this
+    df = df.drop("image", axis=1)
     df.to_csv(fp["ORIGINAL_LABELS"], index=False)
 
 
@@ -124,10 +127,12 @@ def populate_datafolder_from_original(
     return len(df["_id"].unique())
 
 
-def flush_original_data(fp):
+def flush_data(image_dir, label_dir):
     # remove all of the images
-    for image in os.listdir(fp["ORIGINAL_IMAGES"]):
-        os.remove(os.path.join(fp["ORIGINAL_IMAGES"], image))
-    # remove all of the labels
-    # this may need to be changed as we want to append to the file, not overwrite it
-    os.remove(fp["ORIGINAL_LABELS"])
+    for image in os.listdir(image_dir):
+        os.remove(os.path.join(image_dir, image))
+    # remoce all of the labels
+    with open(label_dir, 'r') as file:
+        header = file.readline()
+    with open(label_dir, 'w') as file:
+        file.write(header)

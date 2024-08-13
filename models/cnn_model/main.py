@@ -9,7 +9,7 @@ from helper.model_specs import pre_save_model_specs
 from helper.data import (
     populate_datafolder_from_original,
     populate_original_from_formatted_json,
-    flush_original_data,
+    flush_data,
 )
 from helper.json_processing import format_json
 from helper.callbacks import (
@@ -66,6 +66,11 @@ def compile_argument_parser():
 
     return args
 
+def validate_flags(args):
+    if (args.create and args.version):
+        raise ValueError("You cannot CREATE a new model and define the VERSION at the same time. New model version names are based on time.")
+    if (args.retrain and not args.version):
+        raise ValueError("You must specify the version you want to retrain")
 
 def get_callbacks(fp):
     # defines when the model will stop training
@@ -184,6 +189,15 @@ def expand_existing_model():
     # you should also only do this periodically
     pass
 
+def cleanup():
+    # FLUSHING DATASETS
+    # flush the ORIGINAL data
+    flush_data(fp["ORIGINAL_IMAGES"], fp["ORIGINAL_LABELS"])
+    # flush the TRAINING data (other than the training of the images, we really don't need these things)
+    flush_data(fp["TRAIN_IMAGES"], fp["TRAIN_LABELS"])
+    # flush the TESTING data (other than the training of the images, we really don't need these things)
+    flush_data(fp["TEST_IMAGES"], fp["TEST_LABELS"])
+
 
 if __name__ == "__main__":
     # ===========================================
@@ -200,6 +214,9 @@ if __name__ == "__main__":
 
     # flags
     args = compile_argument_parser()
+
+    # check the arguments to see if they are valid
+    validate_flags(args=args)
 
     # ===========================================
     # define names and filepaths
@@ -267,7 +284,6 @@ if __name__ == "__main__":
         print(f"Expanding the current model to hold more classes")
         expand_existing_model()
 
-    # ensure that the original data folder is wiped for the next use (hopefully the training)
-    flush_original_data(fp=fp)
+    cleanup()
 
     print(f"Model Version: {version}")

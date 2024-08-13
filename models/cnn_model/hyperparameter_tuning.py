@@ -43,34 +43,34 @@ def build_model(hp):
     return model
 
 
-def create_dataset(label_csv, image_folder):
-    # Read the label CSV file
-    labels_df = pd.read_csv(label_csv)
-        
-    # Initialize empty lists to store images and labels
-    images = []
-    labels = []
-        
-    # Iterate over the rows of the label CSV file
-    for _, row in labels_df.iterrows():
-        # Get the image filename and label from each row
-        image_filename = row['filename']
-        label = row['label']
+def create_dataset(label_file, image_folder, batch_size=32):
+    import pandas as pd
+    data = pd.read_csv(label_file)
+    
+    def batch_generator(data, image_folder, batch_size):
+        images = []
+        labels = []
+        for index, row in data.iterrows():
+            image_filename = row['filename']
+            label = row['label']
             
-        # Construct the path to the image file
-        image_path = os.path.join(image_folder, image_filename)
+            # Construct the path to the image file
+            image_path = os.path.join(image_folder, image_filename)
             
-        # Read the image using OpenCV
-        image = cv2.imread(image_path)
+            # Read the image using OpenCV
+            image = cv2.imread(image_path)
 
-        images.append(image)
-        labels.append(label)
+            images.append(image)
+            labels.append(label)
+            
+            if len(images) == batch_size:
+                yield np.array(images), np.array(labels)
+                images, labels = [], []
         
-    # Convert the lists to numpy arrays
-    images = np.array(images)
-    labels = np.array(labels)
-        
-    return images, labels
+        if images:
+            yield np.array(images), np.array(labels)
+    
+    return batch_generator(data, image_folder, batch_size)
 
 def main():
     # Load your dataset
@@ -78,9 +78,11 @@ def main():
     train_labels = os.path.join()
     test_images = os.path.join()
     test_labels = os.path.join()
+
+    batch_size = 32
     
-    (x_train, y_train) = create_dataset(train_labels, train_images) 
-    (x_val, y_val) = create_dataset(test_labels, test_images)
+    (x_train, y_train) = create_dataset(train_labels, train_images, batch_size) 
+    (x_val, y_val) = create_dataset(test_labels, test_images, batch_size)
     
 
 

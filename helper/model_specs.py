@@ -49,7 +49,7 @@ def post_save_model_specs(
             "training_time": training_time,
             "final_loss": loss,
             "final_accuracy": accuracy,
-            "model_summary": str(model.summary()) if model else None,
+            "model_summary": str(model.summary()),
         }
     )
 

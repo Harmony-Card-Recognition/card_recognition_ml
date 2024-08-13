@@ -137,7 +137,6 @@ def fit_model(
     model.save(os.path.join(fp["MODEL"], 'model.keras'))
 
     if verbose:
-        print(f'\nModel evaluated & saved locally at {fp["MODEL"]}.keras on {
-              get_current_time()} after {training_time}!\n')
+        print(f'\nModel evaluated & saved locally at {fp["MODEL"]}.keras on {get_current_time()} after {training_time}!\n')
 
     return model

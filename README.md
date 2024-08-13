@@ -5,7 +5,7 @@ python main.py --retrain -v 2024.08.09.00.44.25 -c LorcanaCard --verbose
 # Packages to Install
 ### NOTE: first activate the venv so that you are installing the packages there and not the host machine 
     DEPRECIATED: pip install scikit-learn opencv-python keras numpy pandas Pillow requests tensorflow matplotlib tensorflow_probability tensorrt tensorflow-probability[tf]
-    pip install tensorflow[and-cuda] numpy pandas requests Pillow scikit-learn bidict 
+    pip install tensorflow[and-cuda] numpy pandas requests Pillow scikit-learn keras-tuner
 
 
 # Virtual Environment 

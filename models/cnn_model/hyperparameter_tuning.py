@@ -74,10 +74,11 @@ def create_dataset(label_file, image_folder, batch_size=32):
 
 def main():
     # Load your dataset
-    train_images = os.path.join()
-    train_labels = os.path.join()
-    test_images = os.path.join()
-    test_labels = os.path.join()
+    dfp = "/home/jude/harmony_org/card_recognition_ml/.data/cnn/OnePieceCard/dataset"
+    train_images = os.path.join(dfp, "train_images")
+    train_labels = os.path.join(dfp, "train_labels.csv")
+    test_images = os.path.join(dfp, "test_images")
+    test_labels = os.path.join(dfp, "test_labels.csv")
 
     batch_size = 32
     
@@ -94,10 +95,9 @@ def main():
         directory='my_dir',
         project_name='cnn_tuning')
     
-    tuner.search(x_train, y_train, epochs=10, validation_data=(x_val, y_val))
+    tuner.search(x_train, y_train, epochs=10, validation_data=(x_val, y_val), verbose=2)
     
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
-    
     best_hyperparameters = {
         'units': best_hps.get('units'),
         'learning_rate': best_hps.get('learning_rate'),

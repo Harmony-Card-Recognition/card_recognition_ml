@@ -47,7 +47,7 @@ def build_model(hp):
 
 def find_best_hyperparameters():
     # Load your dataset
-    dfp = "/home/jude/harmony_org/card_recognition_ml/.data/cnn/OnePieceCard/dataset"
+    dfp = "/home/jude/harmony_org/card_recognition_ml/.data/cnn/LorcanaCard/dataset"
     train_images = os.path.join(dfp, "train_images")
     train_labels = os.path.join(dfp, "train_labels.csv")
     test_images = os.path.join(dfp, "test_images")
@@ -66,7 +66,7 @@ def find_best_hyperparameters():
         max_trials=5,
         executions_per_trial=3,
         directory='my_dir',
-        project_name='cnn_tuning')
+        project_name='lorcana_cnn_tuning')
     
     tuner.search(train_dataset, epochs=10, validation_data=test_dataset, verbose=2)
     

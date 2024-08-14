@@ -4,11 +4,14 @@ PROJ_PATH = os.path.abspath(os.path.join(
 sys.path.append(PROJ_PATH)
 
 import json
-import kerastuner as kt
+import keras_tuner as kt
 import cv2
 import pandas as pd
 import numpy as np
 from tensorflow.keras import layers, models, optimizers #type: ignore
+
+from cnn import create_dataset
+
 
 
 def build_model(hp):
@@ -43,34 +46,34 @@ def build_model(hp):
     return model
 
 
-def create_dataset(label_file, image_folder, batch_size=32):
-    import pandas as pd
-    data = pd.read_csv(label_file)
+# def create_dataset(label_file, image_folder, batch_size=32):
+#     import pandas as pd
+#     data = pd.read_csv(label_file)
     
-    def batch_generator(data, image_folder, batch_size):
-        images = []
-        labels = []
-        for index, row in data.iterrows():
-            image_filename = row['filename']
-            label = row['label']
+#     def batch_generator(data, image_folder, batch_size):
+#         images = []
+#         labels = []
+#         for index, row in data.iterrows():
+#             image_filename = row['filename']
+#             label = row['label']
             
-            # Construct the path to the image file
-            image_path = os.path.join(image_folder, image_filename)
+#             # Construct the path to the image file
+#             image_path = os.path.join(image_folder, image_filename)
             
-            # Read the image using OpenCV
-            image = cv2.imread(image_path)
+#             # Read the image using OpenCV
+#             image = cv2.imread(image_path)
 
-            images.append(image)
-            labels.append(label)
+#             images.append(image)
+#             labels.append(label)
             
-            if len(images) == batch_size:
-                yield np.array(images), np.array(labels)
-                images, labels = [], []
+#             if len(images) == batch_size:
+#                 yield np.array(images), np.array(labels)
+#                 images, labels = [], []
         
-        if images:
-            yield np.array(images), np.array(labels)
+#         if images:
+#             yield np.array(images), np.array(labels)
     
-    return batch_generator(data, image_folder, batch_size)
+#     return batch_generator(data, image_folder, batch_size)
 
 def main():
     # Load your dataset
@@ -81,18 +84,11 @@ def main():
     test_labels = os.path.join(dfp, "test_labels.csv")
 
     batch_size = 32
+    img_width = 450 
+    img_height = 650 
     
-    train_gen = create_dataset(train_labels, train_images, batch_size) 
-    test_gen = create_dataset(test_labels, test_images, batch_size)
-
-    for x_train, y_train in train_gen:
-        # Process your training batch here
-        pass
-    
-    for x_val, y_val in test_gen:
-        # Process your validation batch here
-        pass
-
+    train_dataset = create_dataset(train_labels, train_images, img_width, img_height, batch_size) 
+    test_dataset = create_dataset(test_labels, test_images, img_width, img_height, batch_size)
 
     tuner = kt.RandomSearch(
         build_model,
@@ -102,7 +98,7 @@ def main():
         directory='my_dir',
         project_name='cnn_tuning')
     
-    tuner.search(x_train, y_train, epochs=10, validation_data=(x_val, y_val), verbose=2)
+    tuner.search(train_dataset, epochs=10, validation_data=test_dataset, verbose=2)
     
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
     best_hyperparameters = {

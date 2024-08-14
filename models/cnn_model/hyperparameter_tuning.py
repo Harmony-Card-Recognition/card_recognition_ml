@@ -110,8 +110,9 @@ def main():
         'img_height': best_hps.get('img_height'),
         'unique_classes': best_hps.get('unique_classes')
     }
-    
-    with open('best_hyperparameters.json', 'w') as f:
+
+    hyperparameter_specs_filepath = os.path.join(dfp, "best_hyper.json") 
+    with open(hyperparameter_specs_filepath, 'w') as f:
         json.dump(best_hyperparameters, f, indent=4)
 
     print(f"""

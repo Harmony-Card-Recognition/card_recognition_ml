@@ -5,6 +5,7 @@ sys.path.append(PROJ_PATH)
 
 import json
 import keras_tuner as kt
+import tensorflow as tf
 import cv2
 import pandas as pd
 import numpy as np
@@ -44,6 +45,10 @@ def build_model(hp):
     
     return model
 
+class ClearMemoryTuner(kt.RandomSearch):
+    def run_trial(self, trial, *args, **kwargs):
+        super(ClearMemoryTuner, self).run_trial(trial, *args, **kwargs)
+        tf.keras.backend.clear_session()
 
 def find_best_hyperparameters():
     # Load your dataset

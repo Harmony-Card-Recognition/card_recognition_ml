@@ -84,8 +84,8 @@ def main():
     test_labels = os.path.join(dfp, "test_labels.csv")
 
     batch_size = 32
-    img_width = 450 
-    img_height = 650 
+    img_width = 313 #450 
+    img_height = 437 #650 
     
     train_dataset = create_dataset(train_labels, train_images, img_width, img_height, batch_size) 
     test_dataset = create_dataset(test_labels, test_images, img_width, img_height, batch_size)

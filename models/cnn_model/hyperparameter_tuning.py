@@ -17,9 +17,8 @@ from cnn import create_dataset
 def build_model(hp):
     model = models.Sequential()
     
-    model.add(layers.InputLayer(shape=(hp.Int('img_width', min_value=28, max_value=256, step=28), 
-                                       hp.Int('img_height', min_value=28, max_value=256, step=28), 3)))
-    
+    model.add(layers.InputLayer(shape=(450, 650, 3)))
+
     model.add(layers.Conv2D(hp.Int('filters_1', min_value=32, max_value=256, step=32), (3, 3)))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
@@ -46,36 +45,7 @@ def build_model(hp):
     return model
 
 
-# def create_dataset(label_file, image_folder, batch_size=32):
-#     import pandas as pd
-#     data = pd.read_csv(label_file)
-    
-#     def batch_generator(data, image_folder, batch_size):
-#         images = []
-#         labels = []
-#         for index, row in data.iterrows():
-#             image_filename = row['filename']
-#             label = row['label']
-            
-#             # Construct the path to the image file
-#             image_path = os.path.join(image_folder, image_filename)
-            
-#             # Read the image using OpenCV
-#             image = cv2.imread(image_path)
-
-#             images.append(image)
-#             labels.append(label)
-            
-#             if len(images) == batch_size:
-#                 yield np.array(images), np.array(labels)
-#                 images, labels = [], []
-        
-#         if images:
-#             yield np.array(images), np.array(labels)
-    
-#     return batch_generator(data, image_folder, batch_size)
-
-def main():
+def find_best_hyperparameters():
     # Load your dataset
     dfp = "/home/jude/harmony_org/card_recognition_ml/.data/cnn/OnePieceCard/dataset"
     train_images = os.path.join(dfp, "train_images")
@@ -84,8 +54,8 @@ def main():
     test_labels = os.path.join(dfp, "test_labels.csv")
 
     batch_size = 32
-    img_width = 313 #450 
-    img_height = 437 #650 
+    img_width = 450 
+    img_height = 650 
     
     train_dataset = create_dataset(train_labels, train_images, img_width, img_height, batch_size) 
     test_dataset = create_dataset(test_labels, test_images, img_width, img_height, batch_size)
@@ -125,4 +95,4 @@ def main():
     """)
 
 if __name__ == "__main__":
-    main()
+    find_best_hyperparameters()

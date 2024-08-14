@@ -82,9 +82,16 @@ def main():
 
     batch_size = 32
     
-    (x_train, y_train) = create_dataset(train_labels, train_images, batch_size) 
-    (x_val, y_val) = create_dataset(test_labels, test_images, batch_size)
+    train_gen = create_dataset(train_labels, train_images, batch_size) 
+    test_gen = create_dataset(test_labels, test_images, batch_size)
+
+    for x_train, y_train in train_gen:
+        # Process your training batch here
+        pass
     
+    for x_val, y_val in test_gen:
+        # Process your validation batch here
+        pass
 
 
     tuner = kt.RandomSearch(

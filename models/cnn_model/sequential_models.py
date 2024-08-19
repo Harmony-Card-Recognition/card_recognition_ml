@@ -64,3 +64,5 @@ def model_2(img_width, img_height, unique_classes):
     
     # Output Layer
     model.add(layers.Dense(unique_classes, activation='softmax'))
+
+    return model

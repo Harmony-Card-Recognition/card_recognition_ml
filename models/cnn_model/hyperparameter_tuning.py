@@ -17,22 +17,20 @@ from cnn import create_dataset
 
 def build_model(hp):
     model = models.Sequential()
-    
-    model.add(layers.InputLayer(shape=(450, 650, 3)))
-
-    model.add(layers.Conv2D(hp.Int('filters_1', min_value=32, max_value=256, step=32), (3, 3)))
+    model.add(layers.Input(shape=(450, 650, 1)))  # Explicit Input layer
+    model.add(layers.Conv2D(hp.Int('filters_1', min_value=32, max_value=128, step=32), (3, 3)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+ 
+    model.add(layers.Conv2D(hp.Int('filters_2', min_value=32, max_value=128, step=32), (3, 3)))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
-    model.add(layers.Conv2D(hp.Int('filters_2', min_value=32, max_value=256, step=32), (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Conv2D(hp.Int('filters_3', min_value=32, max_value=256, step=32), (3, 3)))
+    model.add(layers.Conv2D(hp.Int('filters_3', min_value=32, max_value=128, step=32), (3, 3)))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     
     model.add(layers.Flatten())
-    model.add(layers.Dense(units=hp.Int('units', min_value=32, max_value=512, step=32), activation='relu'))
+    model.add(layers.Dense(units=hp.Int('units', min_value=32, max_value=256, step=32), activation='relu'))
     model.add(layers.Dense(units=hp.Int('unique_classes', min_value=2, max_value=10, step=1), activation='softmax'))
     
     model.compile(
@@ -45,7 +43,7 @@ def build_model(hp):
     
     return model
 
-class ClearMemoryTuner(kt.RandomSearch):
+class ClearMemoryTuner(kt.BayesianOptimization):
     def run_trial(self, trial, *args, **kwargs):
         super(ClearMemoryTuner, self).run_trial(trial, *args, **kwargs)
         tf.keras.backend.clear_session()
@@ -58,38 +56,38 @@ def find_best_hyperparameters():
     test_images = os.path.join(dfp, "test_images")
     test_labels = os.path.join(dfp, "test_labels.csv")
 
-    batch_size = 32
+    batch_size = 16 
     img_width = 450 
     img_height = 650 
     
     train_dataset = create_dataset(train_labels, train_images, img_width, img_height, batch_size) 
     test_dataset = create_dataset(test_labels, test_images, img_width, img_height, batch_size)
 
-    tuner = kt.RandomSearch(
+    tuner = ClearMemoryTuner(
         build_model,
         objective='val_accuracy',
         max_trials=5,
         executions_per_trial=3,
         directory='my_dir',
-        project_name='lorcana_cnn_tuning')
+        project_name='lorcana_cnn_tuning'
+    )
     
     tuner.search(train_dataset, epochs=10, validation_data=test_dataset, verbose=2)
-    
+
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+
     best_hyperparameters = {
-        'units': best_hps.get('units'),
-        'learning_rate': best_hps.get('learning_rate'),
         'filters_1': best_hps.get('filters_1'),
         'filters_2': best_hps.get('filters_2'),
         'filters_3': best_hps.get('filters_3'),
+        'units': best_hps.get('units'),
+        'learning_rate': best_hps.get('learning_rate'),
         'beta_1': best_hps.get('beta_1'),
         'beta_2': best_hps.get('beta_2'),
-        'img_width': best_hps.get('img_width'),
-        'img_height': best_hps.get('img_height'),
         'unique_classes': best_hps.get('unique_classes')
     }
 
-    hyperparameter_specs_filepath = os.path.join(dfp, "best_hyper.json") 
+    hyperparameter_specs_filepath = os.path.join("my_dir", "best_hyper.json") 
     with open(hyperparameter_specs_filepath, 'w') as f:
         json.dump(best_hyperparameters, f, indent=4)
 

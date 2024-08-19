@@ -8,6 +8,7 @@ import time
 from helper.helper import get_current_time, get_elapsed_time
 from helper.image_processing import get_tensor_from_dir
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
+from sequential_models import *
 import tensorflow as tf
 import pandas as pd
 
@@ -47,34 +48,8 @@ def compile_model(
     # Define the model
     if verbose:
         print('Defining the model ...')
-    model = models.Sequential()
 
-    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
-    model.add(layers.Conv2D(64, (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Conv2D(128, (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Conv2D(256, (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Conv2D(256, (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Conv2D(512, (3, 3)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    model.add(layers.Flatten())
-    model.add(layers.Dense(2048))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(unique_classes, activation='softmax'))
+    model = model_2(img_width, img_height, unique_classes)
 
     # Define the optimizer
     optimizer = optimizers.Adam(

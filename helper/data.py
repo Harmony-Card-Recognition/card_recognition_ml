@@ -118,6 +118,8 @@ def populate_datafolder_from_original(
         df, fp["ORIGINAL_IMAGES"], fp["TEST_IMAGES"], fp["TEST_LABELS"], 5, verbose
     )
 
+    # maybe flush the original labels and images here instead of in the main file
+
     if verbose:
         print("Finished creating the datasets!")
 

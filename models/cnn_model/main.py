@@ -206,7 +206,7 @@ if __name__ == "__main__":
     image_size = "large"
     inital_json_grab = -1 # -1 to get all of the objects in the json
     img_width, img_height = 450, 650
-    learning_rate = 0.001
+    learning_rate = 0.0003
     beta_1 = 0.9
     beta_2 = 0.999
     metrics = ["accuracy"]
@@ -243,14 +243,17 @@ if __name__ == "__main__":
         print(f"Creating a new model from scratch")
         format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
                     inital_json_grab, image_size)
-        populate_original_from_formatted_json(
-            fp=fp,
-            verbose=args.verbose,
-        )
-        unique_classes = populate_datafolder_from_original(
-            fp=fp,
-            verbose=args.verbose,
-        )
+        # populate_original_from_formatted_json(
+        #     fp=fp,
+        #     verbose=args.verbose,
+        # )
+        # unique_classes = populate_datafolder_from_original(
+        #     fp=fp,
+        #     verbose=args.verbose,
+        # )
+
+        unique_classes = 2391
+
         create_new_model(
             learning_rate=learning_rate,
             beta_1=beta_1,

@@ -243,16 +243,16 @@ if __name__ == "__main__":
         print(f"Creating a new model from scratch")
         format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
                     inital_json_grab, image_size)
-        populate_original_from_formatted_json(
-            fp=fp,
-            verbose=args.verbose,
-        )
-        unique_classes = populate_datafolder_from_original(
-            fp=fp,
-            verbose=args.verbose,
-        )
+        # populate_original_from_formatted_json(
+        #     fp=fp,
+        #     verbose=args.verbose,
+        # )
+        # unique_classes = populate_datafolder_from_original(
+        #     fp=fp,
+        #     verbose=args.verbose,
+        # )
 
-        # unique_classes = 2391
+        unique_classes = 2391
 
         create_new_model(
             learning_rate=learning_rate,

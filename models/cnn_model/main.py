@@ -71,6 +71,8 @@ def validate_flags(args):
         raise ValueError("You cannot CREATE a new model and define the VERSION at the same time. New model version names are based on time.")
     if (args.retrain and not args.version):
         raise ValueError("You must specify the version you want to retrain")
+    if (not args.cardset):
+        raise ValueError("You must specify a cardset (-c or --cardset)")
 
 def get_callbacks(fp):
     # defines when the model will stop training
@@ -116,6 +118,7 @@ def create_new_model(
     unique_classes,
     callbacks,
     verbose,
+    batch_size,
     epochs,
 ):
     # save some specs of the model that is being trained
@@ -130,6 +133,7 @@ def create_new_model(
         beta_2=beta_2,
         metrics=metrics,
         loss=loss,
+        batch_size=batch_size,
         img_width=img_width,
         img_height=img_height,
     )
@@ -152,6 +156,7 @@ def create_new_model(
         fp=fp,
         callbacks=callbacks,
         verbose=verbose,
+        batch_size=batch_size,
         epochs=epochs,
     )
 
@@ -162,6 +167,7 @@ def retrain_existing_model(
     img_height,
     callbacks,
     verbose,
+    batch_size,
     epochs,
 ):
     # this is for when a client uses the model and gets new labled data
@@ -174,6 +180,7 @@ def retrain_existing_model(
         fp=fp,
         callbacks=callbacks,
         verbose=verbose,
+        batch_size=batch_size,
         epochs=epochs,
     )
 
@@ -211,6 +218,7 @@ if __name__ == "__main__":
     beta_2 = 0.999
     metrics = ["accuracy"]
     loss = "sparse_categorical_crossentropy"
+    batch_size = 16
 
     # flags
     args = compile_argument_parser()
@@ -266,6 +274,7 @@ if __name__ == "__main__":
             unique_classes=unique_classes,
             callbacks=callbacks,
             verbose=args.verbose,
+            batch_size=batch_size,
             epochs=10000000000000,
         )
     elif args.retrain:
@@ -281,6 +290,7 @@ if __name__ == "__main__":
             img_height=img_height,
             callbacks=callbacks,
             verbose=args.verbose,
+            batch_size=batch_size,
             epochs=10000000000000,
         )
     elif args.expand:

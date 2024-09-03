@@ -11,6 +11,7 @@ def pre_save_model_specs(
     beta_1: float = None,
     beta_2: float = None,
     loss: str = None,
+    batch_size: int = None,
     metrics: list[str] = None,
     img_width: int = None,  # this is what the model expects for the input layer
     img_height: int = None,  # this is what the model expects for the input layer
@@ -24,6 +25,7 @@ def pre_save_model_specs(
         "beta_1": beta_1,
         "beta_2": beta_2,
         "loss": loss,
+        "batch_size": batch_size,
         "metrics": metrics,
         "preprocessed_image_dimensions": f"{img_width}x{img_height}",
     }

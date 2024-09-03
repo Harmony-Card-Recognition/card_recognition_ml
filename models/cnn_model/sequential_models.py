@@ -165,3 +165,41 @@ def model_6(img_width, img_height, unique_classes):
     model.add(layers.Dense(unique_classes, activation='softmax'))
 
     return model
+
+def model_7(img_width, img_height, unique_classes):
+    model = models.Sequential()
+    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
+
+    # First Convolutional Block
+    model.add(layers.Conv2D(96, (3, 3)))  # Increased filters from 64 to 96
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Second Convolutional Block
+    model.add(layers.Conv2D(192, (3, 3)))  # Increased filters from 128 to 192
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Third Convolutional Block
+    model.add(layers.Conv2D(384, (3, 3)))  # Increased filters from 256 to 384
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Fourth Convolutional Block
+    model.add(layers.Conv2D(384, (3, 3)))  # Increased filters from 256 to 384
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Fifth Convolutional Block
+    model.add(layers.Conv2D(768, (3, 3)))  # Increased filters from 512 to 768
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Flatten and Fully Connected Layers
+    model.add(layers.Flatten())
+    model.add(layers.Dense(3072))  # Increased units from 2048 to 3072
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(unique_classes, activation='softmax'))
+
+    return model

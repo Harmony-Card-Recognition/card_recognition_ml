@@ -218,7 +218,7 @@ if __name__ == "__main__":
     beta_2 = 0.999
     metrics = ["accuracy"]
     loss = "sparse_categorical_crossentropy"
-    batch_size = 16
+    batch_size = 32 
 
     # flags
     args = compile_argument_parser()

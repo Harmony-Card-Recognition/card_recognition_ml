@@ -213,7 +213,7 @@ if __name__ == "__main__":
     image_size = "large"
     inital_json_grab = -1 # -1 to get all of the objects in the json
     img_width, img_height = 313, 437 #450, 650
-    learning_rate = 0.0003
+    learning_rate = 0.0001
     beta_1 = 0.9
     beta_2 = 0.999
     metrics = ["accuracy"]

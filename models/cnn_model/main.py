@@ -18,6 +18,7 @@ from helper.callbacks import (
     ClearMemory,
 )
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
+import pandas as pd
 import datetime
 import argparse
 
@@ -251,16 +252,20 @@ if __name__ == "__main__":
         print(f"Creating a new model from scratch")
         format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
                     inital_json_grab, image_size)
-        # populate_original_from_formatted_json(
-        #     fp=fp,
-        #     verbose=args.verbose,
-        # )
-        # unique_classes = populate_datafolder_from_original(
-        #     fp=fp,
-        #     verbose=args.verbose,
-        # )
-
-        unique_classes = 2391
+        
+        if not (os.path.exists(fp["DATASET"] and os.path.exists(fp["ORIGINAL"]))):
+            populate_original_from_formatted_json(
+                fp=fp,
+                verbose=args.verbose,
+            )
+            unique_classes = populate_datafolder_from_original(
+                fp=fp,
+                verbose=args.verbose,
+            )
+        else: 
+            df = pd.read_csv(fp["ORIGINAL_LABELS"])
+            unique_classes = len(df["_id"].unique())
+            # unique_classes = 2391
 
         create_new_model(
             learning_rate=learning_rate,

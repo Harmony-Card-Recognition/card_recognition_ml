@@ -48,8 +48,8 @@ def process_original_dataframe(
             distorted_img.save(distorted_img_path)
 
             filenames.append(distorted_img_filename)
-            ids.append(f'{row["_id"]}')
-            labels.append(f'{row["label"]}')
+            ids.append(str(f'{row["_id"]}'))
+            labels.append(str(f'{row["label"]}'))
 
     # Create a dictionary with specified column names
     data = {
@@ -81,7 +81,7 @@ def populate_original_from_formatted_json(
 
     for i, row in df.iterrows():
         if verbose:
-            print(f'Processing {row["_id"]} - image {i}/{json_length-1} ...')
+            print(f'(json to original) Processing {row["_id"]} - image {i}/{json_length-1} ...')
         try:
             response = requests.get(row["image"])
             img = Image.open(BytesIO(response.content))
@@ -112,10 +112,10 @@ def populate_datafolder_from_original(
         print("Reading images from the original folder ...")
 
     process_original_dataframe(
-        df, fp["ORIGINAL_IMAGES"], fp["TRAIN_IMAGES"], fp["TRAIN_LABELS"], 15, verbose
+        df, fp["ORIGINAL_IMAGES"], fp["TRAIN_IMAGES"], fp["TRAIN_LABELS"], 1, verbose
     )
     process_original_dataframe(
-        df, fp["ORIGINAL_IMAGES"], fp["TEST_IMAGES"], fp["TEST_LABELS"], 5, verbose
+        df, fp["ORIGINAL_IMAGES"], fp["TEST_IMAGES"], fp["TEST_LABELS"], 1, verbose
     )
 
     # maybe flush the original labels and images here instead of in the main file
@@ -127,6 +127,8 @@ def populate_datafolder_from_original(
 
     # The function now returns the number of unique classes
     return len(df["_id"].unique())
+
+# def populate_datafolder_from_formatted_json():
 
 
 def flush_data(image_dir, label_dir):

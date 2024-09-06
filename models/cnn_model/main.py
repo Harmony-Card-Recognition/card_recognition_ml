@@ -84,7 +84,9 @@ def get_callbacks(fp):
     # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind
     checkpoint_filepath = os.path.join(fp["MODEL"], "checkpoint.keras")
     checkpoint_callback = callbacks.ModelCheckpoint(
-        filepath=checkpoint_filepath, save_weights_only=False, save_best_only=False
+        filepath=checkpoint_filepath, save_weights_only=False, save_best_only=True,
+        monitor='val_loss',
+        mode='min'
     )
 
     # logs the epoch, accuracy, and loss for a training session

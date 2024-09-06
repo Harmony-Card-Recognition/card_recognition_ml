@@ -112,10 +112,10 @@ def populate_datafolder_from_original(
         print("Reading images from the original folder ...")
 
     process_original_dataframe(
-        df, fp["ORIGINAL_IMAGES"], fp["TRAIN_IMAGES"], fp["TRAIN_LABELS"], 1, verbose
+        df, fp["ORIGINAL_IMAGES"], fp["TRAIN_IMAGES"], fp["TRAIN_LABELS"], 15, verbose
     )
     process_original_dataframe(
-        df, fp["ORIGINAL_IMAGES"], fp["TEST_IMAGES"], fp["TEST_LABELS"], 1, verbose
+        df, fp["ORIGINAL_IMAGES"], fp["TEST_IMAGES"], fp["TEST_LABELS"], 3, verbose
     )
 
     # maybe flush the original labels and images here instead of in the main file

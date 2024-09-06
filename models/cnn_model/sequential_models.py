@@ -3,7 +3,7 @@
 
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision, regularizers# type: ignore
 
-
+# CLASSIC MODELS
 def model_1(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
@@ -243,6 +243,7 @@ def model_8(img_width, img_height, unique_classes):
 
     return model
 
+# RESNET MODELS
 def model_9(img_width, img_height, unique_classes):
     # resnet-like model
     def residual_block(x, filters, kernel_size=3, stride=1):

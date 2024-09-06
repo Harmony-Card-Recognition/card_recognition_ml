@@ -31,8 +31,6 @@ python main.py --retrain -v 2024.08.09.00.44.25 -c LorcanaCard --verbose
 # GPU usage
 https://www.tensorflow.org/install/pip#linux_setup
 
-
-
 # other stupid tensorflow and NVIDIA caca and weewee
 sudo echo 0 | sudo tee -a /sys/bus/pci/devices/0000:01:00.0/numa_node
 

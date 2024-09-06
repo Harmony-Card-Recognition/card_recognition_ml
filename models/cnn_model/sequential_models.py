@@ -274,3 +274,97 @@ def model_9(img_width, img_height, unique_classes):
 
     model = models.Model(inputs, outputs)
     return model
+
+def model_10(img_width, img_height, unique_classes):
+    # vgg-like model
+    model = models.Sequential()
+    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
+
+    # Block 1
+    model.add(layers.Conv2D(64, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(64, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Block 2
+    model.add(layers.Conv2D(128, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(128, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Block 3
+    model.add(layers.Conv2D(256, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(256, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(256, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Block 4
+    model.add(layers.Conv2D(512, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(512, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(512, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Block 5
+    model.add(layers.Conv2D(512, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(512, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Conv2D(512, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Flatten and Fully Connected Layers
+    model.add(layers.Flatten())
+    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(unique_classes, activation='softmax'))
+
+    return model
+
+def model_11(img_width, img_height, unique_classes):
+    # inception-like model
+    def inception_module(x, filters):
+        branch1 = layers.Conv2D(filters, (1, 1), padding='same', activation='relu', kernel_regularizer=regularizers.l2(0.001))(x)
+
+        branch2 = layers.Conv2D(filters, (1, 1), padding='same', activation='relu', kernel_regularizer=regularizers.l2(0.001))(x)
+        branch2 = layers.Conv2D(filters, (3, 3), padding='same', activation='relu', kernel_regularizer=regularizers.l2(0.001))(branch2)
+
+        branch3 = layers.Conv2D(filters, (1, 1), padding='same', activation='relu', kernel_regularizer=regularizers.l2(0.001))(x)
+        branch3 = layers.Conv2D(filters, (5, 5), padding='same', activation='relu', kernel_regularizer=regularizers.l2(0.001))(branch3)
+
+        branch4 = layers.MaxPooling2D((3, 3), strides=(1, 1), padding='same')(x)
+        branch4 = layers.Conv2D(filters, (1, 1), padding='same', activation='relu', kernel_regularizer=regularizers.l2(0.001))(branch4)
+
+        return layers.concatenate([branch1, branch2, branch3, branch4], axis=-1)
+
+    inputs = layers.Input(shape=(img_width, img_height, 3))
+    x = layers.Conv2D(64, (7, 7), strides=2, padding='same', activation='relu', kernel_regularizer=regularizers.l2(0.001))(inputs)
+    x = layers.MaxPooling2D((3, 3), strides=2, padding='same')(x)
+
+    x = inception_module(x, 64)
+    x = inception_module(x, 128)
+    x = layers.MaxPooling2D((3, 3), strides=2, padding='same')(x)
+
+    x = inception_module(x, 256)
+    x = inception_module(x, 512)
+    x = layers.MaxPooling2D((3, 3), strides=2, padding='same')(x)
+
+    x = layers.GlobalAveragePooling2D()(x)
+    x = layers.Dense(4096, activation='relu', kernel_regularizer=regularizers.l2(0.001))(x)
+    x = layers.Dropout(0.5)(x)
+    outputs = layers.Dense(unique_classes, activation='softmax')(x)
+
+    model = models.Model(inputs, outputs)
+    return model

@@ -253,19 +253,6 @@ if __name__ == "__main__":
         format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
                     inital_json_grab, image_size)
         
-        # if os.path.exists(fp["DATASET"]): 
-        #     df = pd.read_csv(fp["ORIGINAL_LABELS"])
-        #     unique_classes = len(df["_id"].unique())
-        #     # unique_classes = 2391
-        # else: 
-        #     populate_original_from_formatted_json(
-        #         fp=fp,
-        #         verbose=args.verbose,
-        #     )
-        #     unique_classes = populate_datafolder_from_original(
-        #         fp=fp,
-        #         verbose=args.verbose,
-        #     )
         populate_original_from_formatted_json(
             fp=fp,
             verbose=args.verbose,
@@ -274,6 +261,9 @@ if __name__ == "__main__":
             fp=fp,
             verbose=args.verbose,
         )
+        # for testing purposes:
+        # uniqe_classes = 
+        # comment out the top portion
 
         create_new_model(
             learning_rate=learning_rate,

@@ -2,6 +2,9 @@
 python main.py --create -c LorcanaCard --verbose
 python main.py --retrain -v 2024.08.09.00.44.25 -c LorcanaCard --verbose
 
+# TRAINING A MODEL:
+    cd .r
+
 # Packages to Install
 ### NOTE: first activate the venv so that you are installing the packages there and not the host machine 
     DEPRECIATED: pip install scikit-learn opencv-python keras numpy pandas Pillow requests tensorflow matplotlib tensorflow_probability tensorrt tensorflow-probability[tf]

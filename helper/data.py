@@ -128,8 +128,6 @@ def populate_datafolder_from_original(
     # The function now returns the number of unique classes
     return len(df["_id"].unique())
 
-# def populate_datafolder_from_formatted_json():
-
 
 def flush_data(image_dir, label_dir):
     # remove all of the images

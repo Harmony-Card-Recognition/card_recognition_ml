@@ -242,3 +242,35 @@ def model_8(img_width, img_height, unique_classes):
     model.add(layers.Dense(unique_classes, activation='softmax'))
 
     return model
+
+def model_9(img_width, img_height, unique_classes):
+    # resnet-like model
+    def residual_block(x, filters, kernel_size=3, stride=1):
+        shortcut = x
+        x = layers.Conv2D(filters, kernel_size, strides=stride, padding='same', kernel_regularizer=regularizers.l2(0.001))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.LeakyReLU(negative_slope=0.01)(x)
+        x = layers.Conv2D(filters, kernel_size, strides=1, padding='same', kernel_regularizer=regularizers.l2(0.001))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.add([shortcut, x])
+        x = layers.LeakyReLU(negative_slope=0.01)(x)
+        return x
+
+    inputs = layers.Input(shape=(img_width, img_height, 3))
+    x = layers.Conv2D(64, (7, 7), strides=2, padding='same', kernel_regularizer=regularizers.l2(0.001))(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+    x = layers.MaxPooling2D((3, 3), strides=2, padding='same')(x)
+
+    for filters in [64, 128, 256, 512]:
+        x = residual_block(x, filters)
+        x = layers.MaxPooling2D((2, 2))(x)
+
+    x = layers.GlobalAveragePooling2D()(x)
+    x = layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001))(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+    x = layers.Dropout(0.5)(x)
+    outputs = layers.Dense(unique_classes, activation='softmax')(x)
+
+    model = models.Model(inputs, outputs)
+    return model

@@ -30,7 +30,7 @@ def process_original_dataframe(
         if verbose:
             print(f'Processing {row["_id"]} - image {i}/{len(df)-1} ...')
         try:
-            img_path = os.path.join(original_images, row["filename"])
+            img_path = os.path.join(original_images, f'{row["filename"]}')
             img = Image.open(img_path)
         except UnidentifiedImageError:
             if verbose:
@@ -48,8 +48,8 @@ def process_original_dataframe(
             distorted_img.save(distorted_img_path)
 
             filenames.append(distorted_img_filename)
-            ids.append(str(f'{row["_id"]}'))
-            labels.append(str(f'{row["label"]}'))
+            ids.append(f'{row["_id"]}')
+            labels.append(f'{row["label"]}')
 
     # Create a dictionary with specified column names
     data = {

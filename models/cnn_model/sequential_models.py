@@ -253,6 +253,12 @@ def model_9(img_width, img_height, unique_classes):
         x = layers.LeakyReLU(negative_slope=0.01)(x)
         x = layers.Conv2D(filters, kernel_size, strides=1, padding='same', kernel_regularizer=regularizers.l2(0.001))(x)
         x = layers.BatchNormalization()(x)
+        
+        # Adjust the shortcut to have the same shape as the output
+        if stride != 1 or shortcut.shape[-1] != filters:
+            shortcut = layers.Conv2D(filters, (1, 1), strides=stride, padding='same', kernel_regularizer=regularizers.l2(0.001))(shortcut)
+            shortcut = layers.BatchNormalization()(shortcut)
+        
         x = layers.add([shortcut, x])
         x = layers.LeakyReLU(negative_slope=0.01)(x)
         return x
@@ -264,8 +270,7 @@ def model_9(img_width, img_height, unique_classes):
     x = layers.MaxPooling2D((3, 3), strides=2, padding='same')(x)
 
     for filters in [64, 128, 256, 512]:
-        x = residual_block(x, filters)
-        x = layers.MaxPooling2D((2, 2))(x)
+        x = residual_block(x, filters, stride=2 if filters != 64 else 1)
 
     x = layers.GlobalAveragePooling2D()(x)
     x = layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001))(x)

@@ -252,9 +252,8 @@ if __name__ == "__main__":
     # ===========================================
     if args.create:
         print(f"Creating a new model from scratch")
-        format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
-                    inital_json_grab, image_size)
-        
+        # format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
+        #             inital_json_grab, image_size)
         # populate_original_from_formatted_json(
         #     fp=fp,
         #     verbose=args.verbose,
@@ -263,6 +262,7 @@ if __name__ == "__main__":
         #     fp=fp,
         #     verbose=args.verbose,
         # )
+
         # for testing purposes:
         unique_classes = 23136
         # comment out the top portion

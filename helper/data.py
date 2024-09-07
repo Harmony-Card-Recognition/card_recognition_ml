@@ -32,9 +32,9 @@ def process_original_dataframe(
         try:
             img_path = os.path.join(original_images, f'{row["filename"]}')
             img = Image.open(img_path)
-        except UnidentifiedImageError:
+        except:
             if verbose:
-                print(f'Error: UnidentifiedImageError for {row["_id"]}')
+                print(f'Error Processing Image for {row["_id"]}')
             continue
 
         # Create distorted versions of the image

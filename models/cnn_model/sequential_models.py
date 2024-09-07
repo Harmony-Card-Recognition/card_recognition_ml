@@ -263,7 +263,7 @@ def model_9(img_width, img_height, unique_classes):
         x = layers.LeakyReLU(negative_slope=0.01)(x)
         return x
 
-    inputs = layers.Input(shape=(img_width, img_height, 3))
+    inputs = layers.Input(shape=(img_height, img_width, 3))  # Corrected input shape
     x = layers.Conv2D(64, (7, 7), strides=2, padding='same', kernel_regularizer=regularizers.l2(0.001))(inputs)
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU(negative_slope=0.01)(x)

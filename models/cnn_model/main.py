@@ -255,16 +255,16 @@ if __name__ == "__main__":
         format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
                     inital_json_grab, image_size)
         
-        populate_original_from_formatted_json(
-            fp=fp,
-            verbose=args.verbose,
-        )
-        unique_classes = populate_datafolder_from_original(
-            fp=fp,
-            verbose=args.verbose,
-        )
+        # populate_original_from_formatted_json(
+        #     fp=fp,
+        #     verbose=args.verbose,
+        # )
+        # unique_classes = populate_datafolder_from_original(
+        #     fp=fp,
+        #     verbose=args.verbose,
+        # )
         # for testing purposes:
-        # uniqe_classes = 
+        uniqe_classes = 23136
         # comment out the top portion
 
         create_new_model(

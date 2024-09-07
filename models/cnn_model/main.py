@@ -264,7 +264,7 @@ if __name__ == "__main__":
         #     verbose=args.verbose,
         # )
         # for testing purposes:
-        uniqe_classes = 23136
+        unique_classes = 23136
         # comment out the top portion
 
         create_new_model(

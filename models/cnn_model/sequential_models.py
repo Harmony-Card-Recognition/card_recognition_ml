@@ -1,7 +1,7 @@
 
 
 
-from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision, regularizers# type: ignore
+from tensorflow.keras import initializers, layers, models, regularizers# type: ignore
 
 # CLASSIC MODELS
 def model_1(img_width, img_height, unique_classes):
@@ -35,7 +35,6 @@ def model_1(img_width, img_height, unique_classes):
     model.add(layers.Dense(unique_classes, activation='softmax'))
 
     return model
-
 
 def model_2(img_width, img_height, unique_classes):
     model = models.Sequential()
@@ -127,7 +126,6 @@ def model_4(img_width, img_height, unique_classes):
 
     return model
 
-
 def model_6(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
@@ -204,7 +202,6 @@ def model_7(img_width, img_height, unique_classes):
 
     return model
 
-
 def model_8(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
@@ -277,6 +274,54 @@ def model_9(img_width, img_height, unique_classes):
     x = layers.LeakyReLU(negative_slope=0.01)(x)
     x = layers.Dropout(0.5)(x)
     outputs = layers.Dense(unique_classes, activation='softmax')(x)
+
+    model = models.Model(inputs, outputs)
+    return model
+
+def model_91(img_width, img_height, unique_classes):
+    # resnet-like model 
+    # uses He initalization
+    def residual_block(x, filters, kernel_size=3, stride=1):
+        shortcut = x
+        x = layers.Conv2D(filters, kernel_size, strides=stride, padding='same', 
+                          kernel_regularizer=regularizers.l2(0.001),
+                          kernel_initializer=initializers.he_normal())(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.LeakyReLU(negative_slope=0.01)(x)
+        x = layers.Conv2D(filters, kernel_size, strides=1, padding='same', 
+                          kernel_regularizer=regularizers.l2(0.001),
+                          kernel_initializer=initializers.he_normal())(x)
+        x = layers.BatchNormalization()(x)
+        
+        # Adjust the shortcut to have the same shape as the output
+        if stride != 1 or shortcut.shape[-1] != filters:
+            shortcut = layers.Conv2D(filters, (1, 1), strides=stride, padding='same', 
+                                     kernel_regularizer=regularizers.l2(0.001),
+                                     kernel_initializer=initializers.he_normal())(shortcut)
+            shortcut = layers.BatchNormalization()(shortcut)
+        
+        x = layers.add([shortcut, x])
+        x = layers.LeakyReLU(negative_slope=0.01)(x)
+        return x
+
+    inputs = layers.Input(shape=(img_height, img_width, 3))  # Corrected input shape
+    x = layers.Conv2D(64, (7, 7), strides=2, padding='same', 
+                      kernel_regularizer=regularizers.l2(0.001),
+                      kernel_initializer=initializers.he_normal())(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+    x = layers.MaxPooling2D((3, 3), strides=2, padding='same')(x)
+
+    for filters in [64, 128, 256, 512]:
+        x = residual_block(x, filters, stride=2 if filters != 64 else 1)
+
+    x = layers.GlobalAveragePooling2D()(x)
+    x = layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001),
+                     kernel_initializer=initializers.he_normal())(x)
+    x = layers.LeakyReLU(negative_slope=0.01)(x)
+    x = layers.Dropout(0.5)(x)
+    outputs = layers.Dense(unique_classes, activation='softmax',
+                           kernel_initializer=initializers.he_normal())(x)
 
     model = models.Model(inputs, outputs)
     return model

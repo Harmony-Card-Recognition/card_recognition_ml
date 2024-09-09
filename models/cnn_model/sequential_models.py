@@ -4,7 +4,7 @@
 from tensorflow.keras import initializers, layers, models, regularizers# type: ignore
 
 # CLASSIC MODELS
-def model_1(img_width, img_height, unique_classes):
+def model_classic_1(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
@@ -36,7 +36,7 @@ def model_1(img_width, img_height, unique_classes):
 
     return model
 
-def model_2(img_width, img_height, unique_classes):
+def model_classic_2(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
@@ -66,7 +66,7 @@ def model_2(img_width, img_height, unique_classes):
 
     return model
 
-def model_3(img_width, img_height, unique_classes):
+def model_classic_3(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
@@ -96,7 +96,7 @@ def model_3(img_width, img_height, unique_classes):
 
     return model
 
-def model_4(img_width, img_height, unique_classes):
+def model_classic_4(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
@@ -126,7 +126,7 @@ def model_4(img_width, img_height, unique_classes):
 
     return model
 
-def model_6(img_width, img_height, unique_classes):
+def model_classic_5(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
@@ -164,7 +164,7 @@ def model_6(img_width, img_height, unique_classes):
 
     return model
 
-def model_7(img_width, img_height, unique_classes):
+def model_classic_6(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
@@ -202,7 +202,7 @@ def model_7(img_width, img_height, unique_classes):
 
     return model
 
-def model_8(img_width, img_height, unique_classes):
+def model_classic_8(img_width, img_height, unique_classes):
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
@@ -240,9 +240,60 @@ def model_8(img_width, img_height, unique_classes):
 
     return model
 
+def model_classic_9(img_width, img_height, unique_classes):
+    # reduceing the dropout while testing
+    # also there is one more layer to this model
+    # not just larger neurons
+    model = models.Sequential()
+    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
+
+    # First Convolutional Block
+    model.add(layers.Conv2D(64, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Second Convolutional Block
+    model.add(layers.Conv2D(128, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Third Convolutional Block
+    model.add(layers.Conv2D(256, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Fourth Convolutional Block
+    model.add(layers.Conv2D(512, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Fifth Convolutional Block
+    model.add(layers.Conv2D(512, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Sixth Convolutional Block (Added for more capacity)
+    model.add(layers.Conv2D(1024, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D(2, 2))
+
+    # Flatten and Fully Connected Layers
+    model.add(layers.Flatten())
+    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001)))  # Increased units
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Dropout(0.3))
+    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001)))  # Added another dense layer
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Dropout(0.3))
+    model.add(layers.Dense(unique_classes, activation='softmax'))
+
+    return model
+
+
 # RESNET MODELS
 def model_9(img_width, img_height, unique_classes):
     # resnet-like model
+    # did not work for pokemon (lr 0.0001)
     def residual_block(x, filters, kernel_size=3, stride=1):
         shortcut = x
         x = layers.Conv2D(filters, kernel_size, strides=stride, padding='same', kernel_regularizer=regularizers.l2(0.001))(x)
@@ -281,6 +332,8 @@ def model_9(img_width, img_height, unique_classes):
 def model_91(img_width, img_height, unique_classes):
     # resnet-like model 
     # uses He initalization
+    # did not work for pokemon (lr 0.0001)
+
     def residual_block(x, filters, kernel_size=3, stride=1):
         shortcut = x
         x = layers.Conv2D(filters, kernel_size, strides=stride, padding='same', 

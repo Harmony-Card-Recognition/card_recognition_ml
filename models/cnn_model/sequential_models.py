@@ -248,47 +248,41 @@ def model_classic_9(img_width, img_height, unique_classes):
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 
     # First Convolutional Block
-    model.add(layers.Conv2D(64, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.Conv2D(64, (3, 3), kernel_regularizer=regularizers.l2(0.001), kernel_initializer=initializers.glorot_uniform()))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     # Second Convolutional Block
-    model.add(layers.Conv2D(128, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.Conv2D(128, (3, 3), kernel_regularizer=regularizers.l2(0.001), kernel_initializer=initializers.glorot_uniform()))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     # Third Convolutional Block
-    model.add(layers.Conv2D(256, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.Conv2D(256, (3, 3), kernel_regularizer=regularizers.l2(0.001), kernel_initializer=initializers.glorot_uniform()))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     # Fourth Convolutional Block
-    model.add(layers.Conv2D(512, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.Conv2D(512, (3, 3), kernel_regularizer=regularizers.l2(0.001), kernel_initializer=initializers.glorot_uniform()))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     # Fifth Convolutional Block
-    model.add(layers.Conv2D(512, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
-    model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.MaxPooling2D(2, 2))
-
-    # Sixth Convolutional Block (Added for more capacity)
-    model.add(layers.Conv2D(1024, (3, 3), kernel_regularizer=regularizers.l2(0.001)))
+    model.add(layers.Conv2D(512, (3, 3), kernel_regularizer=regularizers.l2(0.001), kernel_initializer=initializers.glorot_uniform()))
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D(2, 2))
 
     # Flatten and Fully Connected Layers
     model.add(layers.Flatten())
-    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001)))  # Increased units
+    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001), kernel_initializer=initializers.glorot_uniform()))  # Increased units
     model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.Dropout(0.3))
-    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001)))  # Added another dense layer
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(4096, kernel_regularizer=regularizers.l2(0.001), kernel_initializer=initializers.glorot_uniform()))  # Added another dense layer
     model.add(layers.LeakyReLU(negative_slope=0.01))
-    model.add(layers.Dropout(0.3))
-    model.add(layers.Dense(unique_classes, activation='softmax'))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(unique_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform()))
 
     return model
-
 
 # RESNET MODELS
 def model_9(img_width, img_height, unique_classes):

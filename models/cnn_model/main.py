@@ -263,7 +263,8 @@ if __name__ == "__main__":
         # )
 
         # for testing purposes:
-        unique_classes = 23136
+        # unique_classes = 23136
+        unique_classes = 12
         # comment out the top portion
 
         create_new_model(

@@ -163,7 +163,6 @@ def create_new_model(
         epochs=epochs,
     )
 
-
 def retrain_existing_model(
     fp,
     img_width,
@@ -186,7 +185,6 @@ def retrain_existing_model(
         batch_size=batch_size,
         epochs=epochs,
     )
-
 
 def expand_existing_model():
     # adds to the current dataset (with new classifications)
@@ -254,6 +252,7 @@ if __name__ == "__main__":
         print(f"Creating a new model from scratch")
         # format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
         #             inital_json_grab, image_size)
+
         # populate_original_from_formatted_json(
         #     fp=fp,
         #     verbose=args.verbose,

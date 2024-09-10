@@ -148,7 +148,7 @@ def format_json(
     new_filepath: str,
     image_count: int,
     image_size: str,
-    attributes: list[str] = ["_id", "productUrlName"], # TODO: remove the productUrl name when this project is done
+    attributes: list[str] = ["_id", "productUrlName", "types"], # TODO: remove the productUrl name when this project is done
     verbose: bool = True,
 ):
     image_attribute_label = "images"

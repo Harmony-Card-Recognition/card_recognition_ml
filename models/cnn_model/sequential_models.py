@@ -244,6 +244,7 @@ def model_classic_9(img_width, img_height, unique_classes):
     # reduceing the dropout while testing
     # also there is one more layer to this model
     # not just larger neurons
+    # this used Glorog Init
     model = models.Sequential()
     model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
 

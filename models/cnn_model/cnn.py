@@ -105,7 +105,6 @@ def fit_model(
         training_time=training_time,
         loss=loss,
         accuracy=accuracy,
-        model=model,
     )
 
     # save it locally for future reuse

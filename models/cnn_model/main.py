@@ -139,6 +139,7 @@ def create_new_model(
         batch_size=batch_size,
         img_width=img_width,
         img_height=img_height,
+        model=model,
     )
 
     model = compile_model(

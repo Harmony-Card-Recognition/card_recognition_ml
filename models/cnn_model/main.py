@@ -124,6 +124,19 @@ def create_new_model(
     batch_size,
     epochs,
 ):
+
+    model = compile_model(
+        unique_classes=unique_classes,
+        img_width=img_width,
+        img_height=img_height,
+        learning_rate=learning_rate,
+        beta_1=beta_1,
+        beta_2=beta_2,
+        metrics=metrics,
+        loss=loss,
+        verbose=verbose,
+    )
+
     # save some specs of the model that is being trained
     pre_save_model_specs(
         fp=fp,
@@ -140,18 +153,6 @@ def create_new_model(
         img_width=img_width,
         img_height=img_height,
         model=model,
-    )
-
-    model = compile_model(
-        unique_classes=unique_classes,
-        img_width=img_width,
-        img_height=img_height,
-        learning_rate=learning_rate,
-        beta_1=beta_1,
-        beta_2=beta_2,
-        metrics=metrics,
-        loss=loss,
-        verbose=verbose,
     )
     model = fit_model(
         model=model,

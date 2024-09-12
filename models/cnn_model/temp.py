@@ -5,6 +5,7 @@ sys.path.append(PROJ_PATH)
 
 import json
 import csv
+import random
 
 from helper.json_processing import format_json
 from filepaths import get_filepaths
@@ -94,28 +95,51 @@ types_to_id = {
 # update_csv_with_labels(json_filepath, csv_filepath, output_csv_filepath)
 
 
-import csv
-from collections import Counter
+# import csv
+# from collections import Counter
 
-def calculate_label_percentages(csv_filepath):
+# def calculate_label_percentages(csv_filepath):
+#     # Read the CSV file
+#     with open(csv_filepath, 'r') as csv_file:
+#         csv_reader = csv.reader(csv_file)
+#         labels = [row[0] for row in csv_reader]  # Assuming the label is in the first column
+
+#     # Count the occurrences of each label
+#     label_counts = Counter(labels)
+#     total_count = sum(label_counts.values())
+
+#     # Calculate the percentage of each label
+#     label_percentages = {label: (count / total_count) * 100 for label, count in label_counts.items()}
+
+#     return label_percentages
+
+# # Example usage
+# csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/test_labels_new.csv"
+# label_percentages = calculate_label_percentages(csv_filepath)
+
+# # Print the results
+# for label, percentage in label_percentages.items():
+#     print(f"Label {label}: {percentage:.2f}%")
+
+# step 6
+# shuffle all of the lines in a csv file
+def shuffle_csv(csv_filepath, output_csv_filepath):
     # Read the CSV file
     with open(csv_filepath, 'r') as csv_file:
         csv_reader = csv.reader(csv_file)
-        labels = [row[0] for row in csv_reader]  # Assuming the label is in the first column
+        headers = next(csv_reader)  # Read the header row
+        rows = list(csv_reader)  # Read the rest of the rows
 
-    # Count the occurrences of each label
-    label_counts = Counter(labels)
-    total_count = sum(label_counts.values())
+    # Shuffle the rows
+    random.shuffle(rows)
 
-    # Calculate the percentage of each label
-    label_percentages = {label: (count / total_count) * 100 for label, count in label_counts.items()}
-
-    return label_percentages
+    # Write the shuffled rows to a new CSV file
+    with open(output_csv_filepath, 'w', newline='') as output_csv_file:
+        csv_writer = csv.writer(output_csv_file)
+        csv_writer.writerow(headers)  # Write the header row
+        csv_writer.writerows(rows)  # Write the shuffled data rows
 
 # Example usage
-csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/test_labels_new.csv"
-label_percentages = calculate_label_percentages(csv_filepath)
-
-# Print the results
-for label, percentage in label_percentages.items():
-    print(f"Label {label}: {percentage:.2f}%")
+csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/train_labels_new.csv"
+output_csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/train_labels_shuffled.csv"
+shuffle_csv(csv_filepath, output_csv_filepath)

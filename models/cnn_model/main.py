@@ -254,7 +254,7 @@ if __name__ == "__main__":
         print(f"Creating a new model from scratch")
         # format_json(fp["RAW_JSON"], fp["FORMATTED_JSON"],
         #             inital_json_grab, image_size)
-
+        # TODO write a seperate function for creating the training and testing csv files 
         # populate_original_from_formatted_json(
         #     fp=fp,
         #     verbose=args.verbose,

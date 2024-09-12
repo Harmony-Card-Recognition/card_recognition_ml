@@ -4,11 +4,15 @@ PROJ_PATH = os.path.abspath(os.path.join(
 sys.path.append(PROJ_PATH)
 
 from helper.model_specs import post_save_model_specs
-import time
 from helper.helper import get_current_time, get_elapsed_time
 from helper.image_processing import get_tensor_from_dir
 from tensorflow.keras import callbacks, layers, models, optimizers, mixed_precision  # type: ignore
 from sequential_models import *
+
+
+import time
+import numpy as np 
+from sklearn.utils.class_weight import compute_class_weight
 import tensorflow as tf
 import pandas as pd
 
@@ -82,6 +86,16 @@ def fit_model(
     test_dataset = create_dataset(
         fp["TEST_LABELS"], fp["TEST_IMAGES"], img_width, img_height, batch_size=batch_size)
 
+    # Extract labels from the training dataset to compute class weights
+    train_labels = []
+    for _, labels in train_dataset:
+        train_labels.extend(np.argmax(labels.numpy(), axis=1))
+    train_labels = np.array(train_labels)
+
+    # Compute class weights
+    class_weights = compute_class_weight('balanced', classes=np.unique(train_labels), y=train_labels)
+    class_weights_dict = dict(enumerate(class_weights))
+
     st = time.time()
     # Fit the model using the datasets
     model.fit(
@@ -89,6 +103,7 @@ def fit_model(
         epochs=epochs,
         validation_data=test_dataset,
         callbacks=callbacks,
+        class_weight=class_weights_dict,
         verbose=verbose
     )
 

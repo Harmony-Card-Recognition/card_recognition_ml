@@ -60,35 +60,62 @@ types_to_id = {
 # the new label should be based on the types_to_id dictionary. 
 
 # Step 5: Modify the CSV with a new label based on the types_to_id dictionary
-def update_csv_with_labels(json_filepath, csv_filepath, output_csv_filepath):
-    # Load the JSON file
-    with open(json_filepath, 'r') as json_file:
-        json_data = json.load(json_file)
+# def update_csv_with_labels(json_filepath, csv_filepath, output_csv_filepath):
+#     # Load the JSON file
+#     with open(json_filepath, 'r') as json_file:
+#         json_data = json.load(json_file)
 
-    # Create a dictionary to map _id to type
-    id_to_type = {item['_id']: item['types'][0] if 'types' in item and item['types'] else 'None' for item in json_data}
+#     # Create a dictionary to map _id to type
+#     id_to_type = {item['_id']: item['types'][0] if 'types' in item and item['types'] else 'None' for item in json_data}
 
-    # Load the CSV file
+#     # Load the CSV file
+#     with open(csv_filepath, 'r') as csv_file:
+#         csv_reader = csv.reader(csv_file)
+#         headers = next(csv_reader)  # Read the header row
+#         rows = list(csv_reader)
+
+#     # Update each row with the new label
+#     for row in rows:
+#         _id = row[headers.index('_id')]  # Assuming _id is one of the columns in the CSV
+#         type_label = id_to_type.get(_id, 'None')
+#         new_label = types_to_id[type_label]
+#         row[headers.index('label')] = new_label  # Overwrite the existing "label" column
+
+#     # Write the updated CSV to a new file
+#     with open(output_csv_filepath, 'w', newline='') as output_csv_file:
+#         csv_writer = csv.writer(output_csv_file)
+#         csv_writer.writerow(headers)  # Write the header row
+#         csv_writer.writerows(rows)  # Write the data rows
+
+# # Example usage
+# json_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/deckdrafterprod.PokemonCard(-1).json"
+# csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/test_labels.csv"
+# output_csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/test_labels_new.csv"
+# update_csv_with_labels(json_filepath, csv_filepath, output_csv_filepath)
+
+
+import csv
+from collections import Counter
+
+def calculate_label_percentages(csv_filepath):
+    # Read the CSV file
     with open(csv_filepath, 'r') as csv_file:
         csv_reader = csv.reader(csv_file)
-        headers = next(csv_reader)  # Read the header row
-        rows = list(csv_reader)
+        labels = [row[0] for row in csv_reader]  # Assuming the label is in the first column
 
-    # Update each row with the new label
-    for row in rows:
-        _id = row[headers.index('_id')]  # Assuming _id is one of the columns in the CSV
-        type_label = id_to_type.get(_id, 'None')
-        new_label = types_to_id[type_label]
-        row[headers.index('label')] = new_label  # Overwrite the existing "label" column
+    # Count the occurrences of each label
+    label_counts = Counter(labels)
+    total_count = sum(label_counts.values())
 
-    # Write the updated CSV to a new file
-    with open(output_csv_filepath, 'w', newline='') as output_csv_file:
-        csv_writer = csv.writer(output_csv_file)
-        csv_writer.writerow(headers)  # Write the header row
-        csv_writer.writerows(rows)  # Write the data rows
+    # Calculate the percentage of each label
+    label_percentages = {label: (count / total_count) * 100 for label, count in label_counts.items()}
+
+    return label_percentages
 
 # Example usage
-json_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/deckdrafterprod.PokemonCard(-1).json"
-csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/test_labels.csv"
-output_csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/test_labels_new.csv"
-update_csv_with_labels(json_filepath, csv_filepath, output_csv_filepath)
+csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/test_labels_new.csv"
+label_percentages = calculate_label_percentages(csv_filepath)
+
+# Print the results
+for label, percentage in label_percentages.items():
+    print(f"Label {label}: {percentage:.2f}%")

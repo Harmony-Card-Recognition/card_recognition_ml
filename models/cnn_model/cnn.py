@@ -89,7 +89,11 @@ def fit_model(
     # Extract labels from the training dataset to compute class weights
     train_labels = []
     for _, labels in train_dataset:
-        train_labels.extend(np.argmax(labels.numpy(), axis=1))
+        print(labels.shape)  # Debugging: Print the shape of the labels array
+        if len(labels.shape) > 1 and labels.shape[1] > 1:
+            train_labels.extend(np.argmax(labels.numpy(), axis=1))
+        else:
+            train_labels.extend(labels.numpy())
     train_labels = np.array(train_labels)
 
     # Compute class weights

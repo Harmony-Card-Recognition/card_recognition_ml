@@ -265,8 +265,8 @@ if __name__ == "__main__":
         # )
 
         # for testing purposes:
-        # unique_classes = 23136
-        unique_classes = 12
+        unique_classes = 23136
+        # unique_classes = 12
 
         # df = pd.read_csv(fp["ORIGINAL_LABELS"])
         # return len(df["_id"].unique())

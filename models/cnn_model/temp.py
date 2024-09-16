@@ -31,7 +31,20 @@ types_to_id = {
     "Fighting" : 10,
     "Colorless" : 11,
 }
-
+id_to_types= {
+    0: "None",
+    1: "Grass",
+    2: "Lightning", 
+    3: "Darkness",
+    4: "Fairy", 
+    5: "Fire", 
+    6: "Psychic",
+    7: "Metal",
+    8: "Dragon",
+    9: "Water",
+    10: "Fighting",
+    11: "Colorless",
+}
 # def relabel_ids(input_filepath, output_filepath):
 #     with open(input_filepath, 'r') as infile:
 #         data = json.load(infile)
@@ -123,23 +136,81 @@ types_to_id = {
 
 # step 6
 # shuffle all of the lines in a csv file
-def shuffle_csv(csv_filepath, output_csv_filepath):
-    # Read the CSV file
-    with open(csv_filepath, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file)
-        headers = next(csv_reader)  # Read the header row
-        rows = list(csv_reader)  # Read the rest of the rows
+# def shuffle_csv(csv_filepath, output_csv_filepath):
+#     # Read the CSV file
+#     with open(csv_filepath, 'r') as csv_file:
+#         csv_reader = csv.reader(csv_file)
+#         headers = next(csv_reader)  # Read the header row
+#         rows = list(csv_reader)  # Read the rest of the rows
 
-    # Shuffle the rows
-    random.shuffle(rows)
+#     # Shuffle the rows
+#     random.shuffle(rows)
 
-    # Write the shuffled rows to a new CSV file
-    with open(output_csv_filepath, 'w', newline='') as output_csv_file:
-        csv_writer = csv.writer(output_csv_file)
-        csv_writer.writerow(headers)  # Write the header row
-        csv_writer.writerows(rows)  # Write the shuffled data rows
+#     # Write the shuffled rows to a new CSV file
+#     with open(output_csv_filepath, 'w', newline='') as output_csv_file:
+#         csv_writer = csv.writer(output_csv_file)
+#         csv_writer.writerow(headers)  # Write the header row
+#         csv_writer.writerows(rows)  # Write the shuffled data rows
+
+# # Example usage
+# csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/train_labels_new.csv"
+# output_csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/train_labels_shuffled.csv"
+# shuffle_csv(csv_filepath, output_csv_filepath)
+
+
+# step 7
+# a method that takes an int as an input, relablelled json filepath, and a test_labels .csv and a train_label .csv filepath as inputs
+# using that input, it creates new files that only have the specified int as the type specified in the json
+def filter_by_type(type_id, original_smaller_json_filepath, test_csv_filepath, train_csv_filepath, output_json_filepath, output_test_csv_filepath, output_train_csv_filepath):
+    # Load the JSON file
+    with open(original_smaller_json_filepath, 'r') as json_file:
+        json_data = json.load(json_file)
+    
+    # Add these print statements before the line that causes the error
+    print(f"id_to_types: {id_to_types}")
+    print(f"type_id: {type_id}")
+
+
+    # Filter JSON data
+    filtered_json_data = [item for item in json_data if item['_id'] == id_to_types[type_id]]
+
+    # Write the filtered JSON data to a new file
+    with open(output_json_filepath, 'w') as output_json_file:
+        json.dump(filtered_json_data, output_json_file, indent=4)
+
+    # Function to filter rows based on type_id
+    def filter_rows(csv_filepath, output_csv_filepath):
+        with open(csv_filepath, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            headers = next(csv_reader)  # Read the header row
+            rows = list(csv_reader)
+
+        # Filter rows based on the "label" column
+        filtered_rows = [row for row in rows if int(row[headers.index('label')]) == type_id]
+ 
+        # Update the label column in each row
+        for row in rows:
+            row[headers.index('label')] = row[headers.index('filename')].split('_')[0]
+
+        # Write the filtered rows to a new CSV file
+        with open(output_csv_filepath, 'w', newline='') as output_csv_file:
+            csv_writer = csv.writer(output_csv_file)
+            csv_writer.writerow(headers)  # Write the header row
+            csv_writer.writerows(filtered_rows)  # Write the filtered data rows
+
+    # Filter the test and train CSV files
+    filter_rows(test_csv_filepath, output_test_csv_filepath)
+    filter_rows(train_csv_filepath, output_train_csv_filepath)
 
 # Example usage
-csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/train_labels_new.csv"
-output_csv_filepath = "/home/jude/work/store_pass/card_recognition_ml/.data/train_labels_shuffled.csv"
-shuffle_csv(csv_filepath, output_csv_filepath)
+for i in range(12):
+    folder = f"/home/jude/work/store_pass/card_recognition_ml/.data/Pokemon{i}Card/dataset"
+    os.makedirs(folder, exist_ok=True)
+
+    json_filepath = f"/home/jude/work/store_pass/card_recognition_ml/.data/deckdrafterprod.PokemonCard(-1).json"
+    test_csv_filepath = f"/home/jude/work/store_pass/card_recognition_ml/.data/test_labels_shuffled.csv"
+    train_csv_filepath = f"/home/jude/work/store_pass/card_recognition_ml/.data/train_labels_shuffled.csv"
+    output_json_filepath = os.path.join(folder, f"deckdrafterprod.Pokemon{i}Card.json")
+    output_test_csv_filepath = os.path.join(folder, "test_labels.csv")
+    output_train_csv_filepath = os.path.join(folder, "train_labels.csv")
+    filter_by_type(i, json_filepath, test_csv_filepath, train_csv_filepath, output_json_filepath, output_test_csv_filepath, output_train_csv_filepath)

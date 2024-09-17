@@ -104,6 +104,9 @@ def predict_folder_two_link(
     # 
     # repeat steps 1-4 for all of the images in the img_folder_path    
 
+    predictions = []
+    st = time.time()
+
     overall_model = models.load_model(os.path.join(overall_model_path, 'model.keras'))
 
     images = [img for img in os.listdir(
@@ -129,8 +132,43 @@ def predict_folder_two_link(
             model=sub_model,
         )
 
-        print(f'{image_name}:\nprediction: {final_prediction}\nconfidence: {sub_type_confidence * final_prediction_confidence}')
+        print(f'Image: {image_name}')
+        print(f'Prediction: {final_prediction}')
+        print(f'Confidence: {final_prediction_confidence}')
 
+        csv_path = os.path.join(sub_model, 'test_labels.csv')
+        card_info_df = pd.read_csv(csv_path)
+
+        predicted_id = card_info_df[card_info_df['label']
+                                    == final_prediction]['_id'].iloc[0]
+        predicted_obj = find_object_by_id(overall_json_path, predicted_id)
+        if predicted_obj is not None:
+            predicted_name = predicted_obj['productUrlName']
+        else:
+            predicted_name = None
+        predictions.append({image_name: {
+                           '_id': predicted_id, 'productUrlName': predicted_name, 'confidence': str(final_prediction_confidence*sub_type_confidence)}})
+
+    overall_predict_time = get_elapsed_time(st)
+    # overall_predict_time/len(images)
+    ave_time_per_card = (time.time()-st)/len(images)
+
+    with open(os.path.join(img_folder_path, 'info.txt'), 'a') as f:
+        f.write(f'Overall Prediction Time: {overall_predict_time}\n')
+        f.write(f'Averate Time Per Card: {ave_time_per_card}\n')
+        f.write(f'# of Cards: {len(images)}\n')
+
+    predictions_json_path = os.path.join(
+        img_folder_path, f'{os.path.basename(overall_model_path)}_predictions.json')
+    with open(predictions_json_path, 'w') as file:
+        json.dump(predictions, file, indent=4)
+
+    print('\n')
+    print(f'Overall Prediction Time: {overall_predict_time}\n')
+    print(f'Averate Time Per Card: {ave_time_per_card}\n')
+    print(f'# of Cards: {len(images)}\n')
+
+    print("RESULTS SAVED AT THE LARGER MODEL PATH")
         
 
 
@@ -167,7 +205,7 @@ if __name__ == '__main__':
         overall_model_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard/POKEMON_2024.09.13.15.56.02/',
         smaller_models=smaller_models,
         img_folder_path='/home/jude/harmony_org/scans/pokemon/card_1',
-        overall_json_path='',
+        overall_json_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard.old/dataset/deckdrafterprod.PokemonCard(-1).json',
     )
 
 

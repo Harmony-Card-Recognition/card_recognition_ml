@@ -88,22 +88,8 @@ def predict_folder_two_link(
         smaller_models,
         overall_json_path, 
         img_folder_path,   
+        csv_path,
 ): 
-    # step 1:
-    # the card should be passed into the first model
-    # based on the output, look up the model filepath for the second model with the smaller_models dictionary
-
-    # step 2:
-    # load the second model from the filepath
-
-    # step 3:
-    # use the smaller model to identify the final card
-    # 
-    # step 4: 
-    # look up the _id with the function
-    # 
-    # repeat steps 1-4 for all of the images in the img_folder_path    
-
     predictions = []
     st = time.time()
 
@@ -136,7 +122,6 @@ def predict_folder_two_link(
         print(f'Prediction: {final_prediction}')
         print(f'Confidence: {final_prediction_confidence}')
 
-        csv_path = os.path.join(overall_model_path, 'test_labels.csv')
         card_info_df = pd.read_csv(csv_path)
 
         predicted_id = card_info_df[card_info_df['label']
@@ -206,6 +191,8 @@ if __name__ == '__main__':
         smaller_models=smaller_models,
         img_folder_path='/home/jude/harmony_org/scans/pokemon/card_1',
         overall_json_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard.old/dataset/deckdrafterprod.PokemonCard(-1).json',
+        csv_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard/dataset/test_labels.csv'
+
     )
 
 

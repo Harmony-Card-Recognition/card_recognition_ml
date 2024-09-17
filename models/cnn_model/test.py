@@ -192,7 +192,7 @@ if __name__ == '__main__':
         smaller_models=smaller_models,
         img_folder_path='/home/jude/harmony_org/scans/pokemon/card_1',
         overall_json_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard.old/dataset/deckdrafterprod.PokemonCard(-1).json',
-        csv_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard/dataset/test_labels.csv'
+        csv_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard.old/dataset/test_labels.csv'
 
     )
 

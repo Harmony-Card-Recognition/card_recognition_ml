@@ -136,7 +136,7 @@ def predict_folder_two_link(
         print(f'Prediction: {final_prediction}')
         print(f'Confidence: {final_prediction_confidence}')
 
-        csv_path = os.path.join(sub_model, 'test_labels.csv')
+        csv_path = os.path.join(overall_model_path, 'test_labels.csv')
         card_info_df = pd.read_csv(csv_path)
 
         predicted_id = card_info_df[card_info_df['label']

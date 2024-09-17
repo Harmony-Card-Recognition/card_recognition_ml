@@ -112,14 +112,14 @@ def predict_folder_two_link(
     _, img_width, img_height, _ = overall_model.input_shape
 
     for image_name in images:
-        sub_type, sub_type_confidence= int(predict_image(
+        sub_type, sub_type_confidence= predict_image(
             img_folder_path=img_folder_path,
             image_name=image_name,
             img_width=img_width,
             img_height=img_height,
             model=overall_model,
-        ))
-        sub_model = models.load_model(os.path.join(smaller_models[sub_type], 'model.keras'))
+        )
+        sub_model = models.load_model(os.path.join(smaller_models[int(sub_type)], 'model.keras'))
 
         final_prediction, final_prediction_confidence = predict_image(
             img_folder_path=img_folder_path,
@@ -151,16 +151,16 @@ if __name__ == '__main__':
     smaller_models = {
         0: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon0Card/POKEMON0_2024.09.16.17.10.35/',
         1: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon1Card/POKEMON1_2024.09.16.22.57.21/',
-        2: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon2Card/',
-        3: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon3Card/',
-        4: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon4Card/',
-        5: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon5Card/',
-        6: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon6Card/',
-        7: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon7Card/',
-        8: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon8Card/',
-        9: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon9Card/',
-        10:'/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon10Card/',
-        11:'/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon11Card/',
+        2: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon2Card/POKEMON2_2024.09.17.05.06.34',
+        3: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon3Card/POKEMON3_2024.09.17.06.24.25',
+        4: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon4Card/POKEMON4_2024.09.17.06.27.13',
+        5: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon5Card/POKEMON5_2024.09.17.06.28.39',
+        6: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon6Card/POKEMON6_2024.09.17.06.35.38',
+        7: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon7Card/POKEMON7_2024.09.17.06.42.01',
+        8: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon8Card/POKEMON8_2024.09.17.06.44.38',
+        9: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon9Card/POKEMON9_2024.09.17.06.47.04',
+        10:'/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon10Card/POKEMON10_2024.09.17.06.53.39',
+        11:'/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon11Card/POKEMON11_2024.09.17.06.58.33 ',
     }
      
     predict_folder_two_link(

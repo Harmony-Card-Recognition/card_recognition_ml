@@ -133,7 +133,7 @@ def predict_folder_two_link(
         else:
             predicted_name = None
         predictions.append({image_name: {
-                           '_id': predicted_id, 'productUrlName': predicted_name, 'confidence': str(final_prediction_confidence*sub_type_confidence)}})
+                           '_id': predicted_id, 'confidence': str(final_prediction_confidence*sub_type_confidence)}})
 
     overall_predict_time = get_elapsed_time(st)
     # overall_predict_time/len(images)

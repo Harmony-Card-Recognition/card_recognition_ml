@@ -78,7 +78,7 @@ def validate_flags(args):
 def get_callbacks(fp):
     # defines when the model will stop training
     accuracy_threshold_callback = ValidationAccuracyThresholdCallback(
-        threshold=0.98)
+        threshold=0.99)
 
     # saves a snapshot of the model while it is training
     # note: there may be a huge performance difference if we chose to not include this callback... something to keep in mind

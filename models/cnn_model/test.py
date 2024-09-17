@@ -127,11 +127,11 @@ def predict_folder_two_link(
         print(card_info_df)
         predicted_id = card_info_df[card_info_df['label'] == final_prediction]['_id'].iloc[0]
 
-        predicted_obj = find_object_by_id(overall_json_path, predicted_id)
-        if predicted_obj is not None:
-            predicted_name = predicted_obj['productUrlName']
-        else:
-            predicted_name = None
+        # predicted_obj = find_object_by_id(overall_json_path, predicted_id)
+        # if predicted_obj is not None:
+        #     predicted_name = predicted_obj['productUrlName']
+        # else:
+        #     predicted_name = None
         predictions.append({image_name: {
                            '_id': predicted_id, 'confidence': str(final_prediction_confidence*sub_type_confidence)}})
 

@@ -526,6 +526,12 @@ def model_classic_15(img_width, img_height, unique_classes):
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(negative_slope=0.01))
     model.add(layers.MaxPooling2D((2, 2)))
+
+    # Fifth Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(640, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 576 to 640
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
     
     # Flatten and Dense Layers
     model.add(layers.Flatten())

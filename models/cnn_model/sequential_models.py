@@ -453,6 +453,57 @@ def model_classic_13(img_width, img_height, unique_classes):
 
     return model
 
+def model_classic_14(img_width, img_height, unique_classes):
+    model = models.Sequential()
+    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
+
+    # First Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(36, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 32 to 36
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Second Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(72, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 64 to 72
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Third Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(144, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 128 to 144
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Fourth Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(288, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 256 to 288
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Fifth Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(576, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 512 to 576
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Flatten and Fully Connected Layers with Dropout and L2 Regularization
+    model.add(layers.Flatten())
+    model.add(layers.Dense(144, kernel_regularizer=regularizers.l2(0.01)))  # Increased from 128 to 144
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.Dropout(0.5))
+    
+    # Output Layer
+    model.add(layers.Dense(unique_classes, activation='softmax'))
+
+    return model
+
+
+
+
+
+
 # RESNET MODELS
 def model_9(img_width, img_height, unique_classes):
     # resnet-like model

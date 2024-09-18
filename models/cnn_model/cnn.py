@@ -53,7 +53,7 @@ def compile_model(
     if verbose:
         print('Defining the model ...')
 
-    model = model_classic_13(img_width, img_height, unique_classes)
+    model = model_classic_14(img_width, img_height, unique_classes)
 
     # Define the optimizer
     optimizer = optimizers.Adam(

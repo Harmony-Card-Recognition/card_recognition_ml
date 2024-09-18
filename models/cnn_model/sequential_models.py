@@ -499,6 +499,53 @@ def model_classic_14(img_width, img_height, unique_classes):
 
     return model
 
+def model_classic_15(img_width, img_height, unique_classes):
+    model = models.Sequential()
+    model.add(layers.InputLayer(shape=(img_width, img_height, 3)))
+
+    # First Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(40, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 36 to 40
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Second Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(80, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 72 to 80
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Third Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(160, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 144 to 160
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Fourth Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(320, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 288 to 320
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Fifth Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(640, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 576 to 640
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Sixth Convolutional Block with Batch Normalization and L2 Regularization
+    model.add(layers.Conv2D(1280, (3, 3), padding='same', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 1152 to 1280
+    model.add(layers.BatchNormalization())
+    model.add(layers.LeakyReLU(negative_slope=0.01))
+    model.add(layers.MaxPooling2D((2, 2)))
+    
+    # Flatten and Dense Layers
+    model.add(layers.Flatten())
+    model.add(layers.Dense(640, activation='relu', kernel_regularizer=regularizers.l2(0.01)))  # Increased from 576 to 640
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(unique_classes, activation='softmax'))
+
+    return model
 
 
 

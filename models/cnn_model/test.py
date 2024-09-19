@@ -172,8 +172,9 @@ def find_object_by_id(overall_json_path, target_id):
 
 if __name__ == '__main__':
     smaller_models = {
-        0: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon0Card/POKEMON0_2024.09.16.17.10.35/',
-
+        # 0: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon0Card/POKEMON0_2024.09.16.17.10.35/',
+        0: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon0Card/POKEMON0_2024.09.18.04.20.08/',
+        
         1: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon1Card/POKEMON1_2024.09.17.20.46.38',
         2: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon2Card/POKEMON2_2024.09.17.20.59.29',
         3: '/home/jude/harmony_org/card_recognition_ml/.data/cnn/Pokemon3Card/POKEMON3_2024.09.17.21.26.11',
@@ -188,7 +189,7 @@ if __name__ == '__main__':
     }
      
     predict_folder_two_link(
-        overall_model_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard/POKEMON_2024.09.13.15.56.02/',
+        overall_model_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard/POKEMON_2024.09.18.23.43.29/',
         smaller_models=smaller_models,
         img_folder_path='/home/jude/harmony_org/scans/pokemon/card_2',
         overall_json_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard.old/dataset/deckdrafterprod.PokemonCard(-1).json',

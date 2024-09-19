@@ -153,13 +153,13 @@ def predict_folder_two_link(
         #     predicted_name = None
 
         predictions.append({image_name: {
-                        'first prediction value': sub_type,
+                        'first prediction value': str(sub_type),
                         'first predictin _id': str(id_to_types[sub_type]),
-                        'first confidence': sub_type_confidence,
-                        'FINAL prediction value': final_prediction,
-                        'FINAL prediction _id': predicted_id,
-                        'FINAL confidence': final_prediction_confidence,
-                           'overall _id': predicted_id, 
+                        'first confidence': str(sub_type_confidence),
+                        'FINAL prediction value': str(final_prediction),
+                        'FINAL prediction _id': str(predicted_id),
+                        'FINAL confidence': str(final_prediction_confidence),
+                           'overall _id': str(predicted_id), 
                            'overall confidence': str(final_prediction_confidence*sub_type_confidence)}})
 
     overall_predict_time = get_elapsed_time(st)

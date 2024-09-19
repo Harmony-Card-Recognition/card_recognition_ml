@@ -154,7 +154,7 @@ def predict_folder_two_link(
 
         predictions.append({image_name: {
                         'first prediction value': sub_type,
-                        'first predictin _id': id_to_types[sub_type],
+                        'first predictin _id': int(id_to_types[sub_type]),
                         'first confidence': sub_type_confidence,
                         'FINAL prediction value': final_prediction,
                         'FINAL prediction _id': predicted_id,

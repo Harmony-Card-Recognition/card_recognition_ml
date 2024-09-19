@@ -137,7 +137,7 @@ def predict_folder_two_link(
 
         print(f'Image: {image_name}')
         print(f'FIRST prediction value: {sub_type}')
-        print(f'FIRST prediction _id: {id_to_types[final_prediction]}')
+        print(f'FIRST prediction _id: {id_to_types[sub_type]}')
         print(f'FIRST confidence: {sub_type_confidence}\n')
 
         print(f'FINAL prediction value: {final_prediction}')

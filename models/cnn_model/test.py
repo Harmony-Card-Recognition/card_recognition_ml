@@ -219,7 +219,7 @@ if __name__ == '__main__':
     predict_folder_two_link(
         overall_model_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard/POKEMON_2024.09.18.23.43.29/',
         smaller_models=smaller_models,
-        img_folder_path='/home/jude/harmony_org/scans/pokemon/harc_1',
+        img_folder_path='/home/jude/harmony_org/scans/pokemon/card_4',
         overall_json_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard.old/dataset/deckdrafterprod.PokemonCard(-1).json',
         csv_path='/home/jude/harmony_org/card_recognition_ml/.data/cnn/PokemonCard.old/dataset/test_labels.csv'
 

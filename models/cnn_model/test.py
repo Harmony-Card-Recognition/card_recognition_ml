@@ -188,8 +188,9 @@ def predict_folder_two_link(
 
     print('\n')
     print(f'Overall Prediction Time: {overall_predict_time}\n')
+    ave = 0
     for n in subtimes: ave += n 
-    ave = ave %len(subtimes)
+    ave = ave % len(subtimes)
     print(f'Average Raw Time per card: {ave}\n')
     print(f'# of Cards: {len(images)}\n')
 

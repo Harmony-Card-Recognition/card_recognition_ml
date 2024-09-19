@@ -104,6 +104,7 @@ def predict_folder_two_link(
         csv_path,
 ): 
     predictions = []
+    subtimes = []
     st = time.time()
 
     overall_model = models.load_model(os.path.join(overall_model_path, 'model.keras'))
@@ -112,8 +113,11 @@ def predict_folder_two_link(
         img_folder_path) if img.lower().endswith(('.png', '.jpg', '.jpeg'))]
 
     _, img_width, img_height, _ = overall_model.input_shape
+    card_info_df = pd.read_csv(csv_path)
 
     for image_name in images:
+        sub_start_time = time.time()
+
         sub_type, sub_type_confidence= predict_image(
             img_folder_path=img_folder_path,
             image_name=image_name,
@@ -131,9 +135,12 @@ def predict_folder_two_link(
             model=sub_model,
         )
 
-        card_info_df = pd.read_csv(csv_path)
-
         predicted_id = card_info_df[card_info_df['label'] == final_prediction]['_id'].iloc[0]
+
+        sub_end_time = time.time()
+        raw_time = sub_end_time - sub_start_time
+        subtimes.append(raw_time)
+        
 
         print(f'Image: {image_name}')
         print(f'FIRST prediction value: {sub_type}')
@@ -145,6 +152,7 @@ def predict_folder_two_link(
         print(f'FINAL confidence: {final_prediction_confidence}\n')
 
         print(f'OVERALL Confidence: {final_prediction_confidence*sub_type_confidence}')
+        print(f'raw prediction time: {raw_time}')
 
         # predicted_obj = find_object_by_id(overall_json_path, predicted_id)
         # if predicted_obj is not None:
@@ -153,14 +161,16 @@ def predict_folder_two_link(
         #     predicted_name = None
 
         predictions.append({image_name: {
-                        'first prediction value': str(sub_type),
-                        'first predictin _id': str(id_to_types[sub_type]),
-                        'first confidence': str(sub_type_confidence),
-                        'FINAL prediction value': str(final_prediction),
-                        'FINAL prediction _id': str(predicted_id),
+                        'first prediction value': (sub_type),
+                        'first predictin _id': (id_to_types[sub_type]),
+                        'first confidence': int(sub_type_confidence),
+                        'FINAL prediction value': (final_prediction),
+                        'FINAL prediction _id': (predicted_id),
                         'FINAL confidence': str(final_prediction_confidence),
-                           'overall _id': str(predicted_id), 
-                           'overall confidence': str(final_prediction_confidence*sub_type_confidence)}})
+                        'overall _id': (predicted_id), 
+                        'overall confidence': int(final_prediction_confidence*sub_type_confidence),
+                        'raw prediction time': raw_time
+        }})
 
     overall_predict_time = get_elapsed_time(st)
     # overall_predict_time/len(images)
@@ -178,7 +188,9 @@ def predict_folder_two_link(
 
     print('\n')
     print(f'Overall Prediction Time: {overall_predict_time}\n')
-    print(f'Averate Time Per Card: {ave_time_per_card}\n')
+    for n in subtimes: ave += n 
+    ave = ave %len(subtimes)
+    print(f'Average Raw Time per card: {ave}\n')
     print(f'# of Cards: {len(images)}\n')
 
     print("RESULTS SAVED AT THE LARGER MODEL PATH")

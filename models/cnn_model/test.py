@@ -10,7 +10,20 @@ import numpy as np
 import json
 import pandas as pd
 import time
-
+id_to_types= {
+    0: "None",
+    1: "Grass",
+    2: "Lightning", 
+    3: "Darkness",
+    4: "Fairy", 
+    5: "Fire", 
+    6: "Psychic",
+    7: "Metal",
+    8: "Dragon",
+    9: "Water",
+    10: "Fighting",
+    11: "Colorless",
+}
 
 def predict_folder(model_path, overall_json_path, img_folder_path):
     st = time.time()
@@ -118,21 +131,36 @@ def predict_folder_two_link(
             model=sub_model,
         )
 
-        print(f'Image: {image_name}')
-        print(f'Prediction: {final_prediction}')
-        print(f'Confidence: {final_prediction_confidence}')
-
         card_info_df = pd.read_csv(csv_path)
 
         predicted_id = card_info_df[card_info_df['label'] == final_prediction]['_id'].iloc[0]
+
+        print(f'Image: {image_name}')
+        print(f'FIRST prediction value: {sub_type}')
+        print(f'FIRST prediction _id: {id_to_types[final_prediction]}')
+        print(f'FIRST confidence: {sub_type_confidence}\n')
+
+        print(f'FINAL prediction value: {final_prediction}')
+        print(f'FINAL prediction _id: {predicted_id}')
+        print(f'FINAL confidence: {final_prediction_confidence}\n')
+
+        print(f'OVERALL Confidence: {final_prediction_confidence*sub_type_confidence}')
 
         # predicted_obj = find_object_by_id(overall_json_path, predicted_id)
         # if predicted_obj is not None:
         #     predicted_name = predicted_obj['productUrlName']
         # else:
         #     predicted_name = None
+
         predictions.append({image_name: {
-                           '_id': predicted_id, 'confidence': str(final_prediction_confidence*sub_type_confidence)}})
+                        'first prediction value': sub_type,
+                        'first predictin _id': id_to_types[final_prediction],
+                        'first confidence': sub_type_confidence,
+                        'FINAL prediction value': final_prediction,
+                        'FINAL prediction _id': predicted_id,
+                        'FINAL confidence': final_prediction_confidence,
+                           'overall _id': predicted_id, 
+                           'overall confidence': str(final_prediction_confidence*sub_type_confidence)}})
 
     overall_predict_time = get_elapsed_time(st)
     # overall_predict_time/len(images)
